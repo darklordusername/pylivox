@@ -18,7 +18,7 @@ logger = logging.getLogger('')
 logger.setLevel(logging.DEBUG)
 
 def getLogger(name):
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger(name)
     logger.setLevel(logging.DEBUG)
     list(map(lambda i: logger.addHandler(i), handlers))
     return logger
