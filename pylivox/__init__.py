@@ -6,149 +6,13 @@ import time
 import enum
 import socket
 import struct
+import sys 
 import crcmod
 import abc
 import ipaddress
+import inspect 
 import log
 logger = log.getLogger(__name__)
-
-crc32 = crcmod.mkCrcFun(0x104C11DB7, rev=True, initCrc=0x564F580A, xorOut=0xFFFFFFFF)
-crc16 = crcmod.mkCrcFun(0x11021, rev=True, initCrc=0x4C49)
-class Command(abc.ABC):
-
-    _START = b'\xAA'
-    _VERSION = b'\01'
-    
-    class type(enum.Enum):
-        CMD = b'\x00'
-        AKN = b'\x01'
-        MSG = b'\x02'
-
-    def __init__(self, seq=0):
-        self.seq = seq
-        self.crc16 = crc16
-        self.crc32 = crc32
-        self.header_length = 9
-
-    @property
-    def header(self):
-        length = len(self.data) + self.header_length + 4 
-        if length > 1400:
-            raise ValueError(f"{self} is too big. Max 1400 but pack is {length}")
-        return (self._START 
-            + self._VERSION 
-            + length.to_bytes(2, 'little')
-            + Command.type.MSG.value
-            + self.seq.to_bytes(2, 'little')
-        )
-
-    @property
-    def header_crc(self):
-        return self.crc16(self.header).to_bytes(2, 'little')
-
-    @property
-    def crc(self):
-        return self.crc32(self.header + self.header_crc + self.data).to_bytes(4, 'little')
-
-    @property
-    def data(self):
-        raise ValueError(f'No data available for {self}')
-
-    @property
-    def pack(self):
-        return self.header + self.header_crc + self.data + self.crc
-
-    def __repr__(self):
-        return f'{{{self.__class__.__name__}}}'
-
-    # class Lidar(Command):
-    #     SET_MODE                                             = 0X00         
-    #     WRITE_LIDAR_EXTRINSIC_PARAMETERS                     = 0X01         
-    #     READ_LIDAR_EXTRINSIC_PARAMETERS                      = 0X02         
-    #     TURN_ON_OFF_RAIN_FOG_SUPPRESSION                     = 0X03         
-    #     SET_TURN_ON_OFF_FAN                                  = 0X04         
-    #     GET_TURN_ON_OFF_FAN_STATE                            = 0X05         
-    #     SET_LIDAR_RETURN_MODE                                = 0X06         
-    #     GET_LIDAR_RETURN_MODE                                = 0X07         
-    #     SET_IMU_DATA_PUSH_FREQUENCY                          = 0X08         
-    #     GET_IMU_DATA_PUSH_FREQUENCY                          = 0X09         
-    #     UPDATE_UTC_SYNCHRONIZATION_TIME                      = 0X0A     
-
-    # class Hub(Command):
-    #     QUERY_CONNECTED_LIDAR_DEVICE                         = 0X00       
-    #     SET_LIDAR_MODE                                       = 0X01       
-    #     TURN_ON_OFF_DESIGNATED_SLOT_POWER                    = 0X02       
-    #     WRITE_LIDAR_EXTRINSIC_PARAMETERS                     = 0X03       
-    #     READ_LIDAR_EXTRINSIC_PARAMETERS                      = 0X04       
-    #     QUERY_LIDAR_DEVICE_STATUS                            = 0X05       
-    #     TURN_ON_OFF_HUB_CALCULATION_OF_EXTRINSIC_PARAMETERS  = 0X06                 
-    #     TURN_ON_OFF_LIDAR_RAIN_FOG_SUPPRESSION               = 0X07       
-    #     QUERY_HUB_SLOT_POWER_STATUS                          = 0X08       
-    #     SET_LIDAR_TURN_ON_OFF_FAN                            = 0X09       
-    #     GET_LIDAR_TURN_ON_OFF_FAN_STATE                      = 0X0A       
-    #     SET_LIDAR_RETURN_MODE                                = 0X0B       
-    #     GET_LIDAR_RETURN_MODE                                = 0X0C       
-    #     SET_LIDAR_IMU_DATA_PUSH_FREQUENCY                    = 0X0D       
-    #     GET_LIDAR_IMU_DATA_PUSH_FREQUENCY                    = 0X0E       
-
-
-
-class General(Command):
-    CMD_SET = 0
-    def __init__(self):
-        super().__init__()
-        self.cmd_set = self.CMD_SET
-    @property
-    def data(self):
-        return struct.pack('B', self.cmd_set)
-
-    HANDSHAKE                                            = 0X01
-    QUERY_DEVICE_INFORMATION                             = 0X02
-    HEARTBEAT                                            = 0X03
-    START_STOP_SAMPLING                                  = 0X04
-    CHANGE_COORDINATE_SYSTEM                             = 0X05
-    DISCONNECT                                           = 0X06
-    PUSH_ABNORMAL_STATUS_INFORMATION                     = 0X07
-    CONFIGURE_STATIC_DYNAMIC_IP                          = 0X08
-    GET_DEVICE_IP_INFORMATION                            = 0X09
-    REBOOT_DEVICE                                        = 0X0A
-    WRITE_CONFIGURATION_PARAMETERS                       = 0X0B
-    READ_CONFIGURATION_PARAMETERS                        = 0x0C
-    
-class DeviceType(enum.Enum):
-    Hub     = 0     
-    Mid40   = 1 
-    Tele15  = 2
-    Horizon = 3
-
-class Broadcast(General):
-    CMD_ID = 0
-
-    def __init__(self, serial:int, dev_type:DeviceType,  ): #16bytes broadcast_code
-        #TODO description
-        super().__init__()
-        #Check
-        serial.to_bytes(14, 'little')
-        if not isinstance(dev_type, DeviceType):
-            raise TypeError
-        #Save
-        self.cmd_id = self.CMD_ID
-        self.dev_type = dev_type 
-        self.serial = serial
-        self.ip_range_code = ord('3')
-        
-    @property
-    def serial(self)->int:
-        return int.from_bytes(self._serial, 'little')
-
-    @serial.setter
-    def serial(self, nval:int):
-        self._serial = nval.to_bytes(14, 'little')
-
-    @property
-    def data(self):
-        return super().data + struct.pack(f'<B14BBxB2x', self.cmd_id,  *self._serial, self.ip_range_code, self.dev_type.value)
-
 
 lidars = []
 
@@ -178,6 +42,16 @@ class Lidar:
         self._socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self._socket.bind((str(ipaddress.IPv4Address("0.0.0.0")), 65000)) 
+        self._listen_t = threading.Thread(target=self.listen, daemon=True, name="listen")
+        self._listen_t.start()
+        lidars.append(self)
+
+    def listen(self):
+        while True:
+            udp_frame,(addr, port) = self._socket.recvfrom(2048)
+            addr = ipaddress.IPv4Address(addr)
+            cmd = Command.from_frame(udp_frame)
+            pass
         #
         #registering handlers for commands 
         # self._handlers =  {
@@ -221,7 +95,6 @@ class Lidar:
         #     Command.Hub.SET_LIDAR_IMU_DATA_PUSH_FREQUENCY                    : self._handler_set_lidar_imu_data_push_frequency                   ,       
         #     Command.Hub.GET_LIDAR_IMU_DATA_PUSH_FREQUENCY                    : self._handler_get_lidar_imu_data_push_frequency                   ,       
         # }
-        lidars.append(self)
 
     def send(self, cmd:Command, address:ipaddress.IPv4Address, port:int):
         self.seq += 1
@@ -351,4 +224,7 @@ class Lidar:
     def command_handler(self, cmd:Command):
         pass
 
-    
+_classes = [getattr(sys.modules[__name__], member) for member 
+            in dir() if inspect.isclass(getattr(sys.modules[__name__], member)) ]
+
+COMMAND_BY_CMD_ID = { cls.CMD_ID : cls for cls in _classes if issubclass(cls, Command) and hasattr(cls, 'CMD_ID') }
