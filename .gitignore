@@ -5,5 +5,6 @@
 !.gitignore
 !*.py
 !info/**
+!req.txt
 
 pyenv/**
