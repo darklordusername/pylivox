@@ -7,7 +7,7 @@ import enum
 from datetime import datetime
 
 #project 
-from .frame import Frame, FrameResponse
+from  pylivox.control.frame import Frame, FrameResponse
 
 
 class Lidar(Frame):
@@ -326,15 +326,15 @@ class SetImuDataPushFrequency(Lidar):
 
     def __init__(self, freq:'Frequency|int'):
         super().__init__()
-        if type(freq) is int:
-            freq = self.Frequency(freq)
-        elif type(freq) is not self.Frequency:
-            raise TypeError(f'Bad type for freq. Expect "Frequency" or "int". Got {type(freq)}')
-        self._freq = freq.value
+        # if type(freq) is int:
+        #     freq = self.Frequency(freq)
+        # elif type(freq) is not self.Frequency:
+        #     raise TypeError(f'Bad type for freq. Expect "Frequency" or "int". Got {type(freq)}')
+        # self._freq = freq.value
 
-    @property
-    def freq(self)->Frequency:
-        return self.Frequency(self._freq)
+    # @property
+    # def freq(self)->Frequency:
+    #     return self.Frequency(self._freq)
 
     @property
     def payload(self)->bytes:

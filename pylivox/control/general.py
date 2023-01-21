@@ -3,25 +3,22 @@
 #std libs
 from abc import abstractmethod, abstractproperty, abstractstaticmethod
 import enum
-from msilib.schema import Feature
 import struct 
 import ipaddress
 
 #project 
-from .frame import Frame
+from pylivox.control.frame import Frame
 
-class General(Frame):
+class CMD(Frame):
     #TODO description 
-    CMD_SET = 0
+    CMD_SET = None
     CMD_ID = None
-    CMD_TYPE = None
 
     def __init__(self):
         #TODO description
         super().__init__()
         self.cmd_set = self.CMD_SET
         self.cmd_id = None
-    
 
 class WorkState():
     class Lidar:
@@ -49,9 +46,8 @@ class WorkState():
             Initializing    = 0x00            
             Normal          = 0x01
             Error           = 0x04        
-        
 
-class DeviceType(enum.Enum):
+class DeviceType():
     class Enum(enum.Enum):
         Hub     = 0     
         Mid40   = 1 
@@ -69,13 +65,12 @@ class DeviceType(enum.Enum):
     def device_type(self)-> 'DeviceType.Enum':
         return self.Enum(self._device_type)
 
-
-class BroadcastMsg(General, DeviceType):
+class BroadcastMsg(CMD, DeviceType):
     CMD_ID = 0
     CMD_TYPE = Frame.Type.MSG
 
     class Broadcast():
-        __PACK_FORMAT = '<14BBx', #serial, ip_range, reserved
+        __PACK_FORMAT = '<14BBx' #serial, ip_range, reserved
         PACK_SIZE = struct.calcsize(__PACK_FORMAT)
 
         def __init__(self, serial:int, ip_range:int):
@@ -88,7 +83,7 @@ class BroadcastMsg(General, DeviceType):
 
         @property
         def payload(self)->bytes:
-            return struct.pack(self.__PACK_FORMAT, self._serial, self.ip_range)
+            return struct.pack(self.__PACK_FORMAT, *self._serial, self.ip_range)
 
         @staticmethod
         def from_payload(payload:bytes)->'BroadcastMsg.Broadcast':
@@ -106,8 +101,8 @@ class BroadcastMsg(General, DeviceType):
             raise TypeError(f'Bad type for broadcast. Expect "Broadcast" or "bytes". Got {type(broadcast)}')
         self._broadcast = broadcast.payload
         if type(dev_type) is int:
-            dev_type = DeviceType(dev_type)
-        elif type(dev_type) is not int:
+            dev_type = DeviceType.Enum(dev_type)
+        elif type(dev_type) is not DeviceType.Enum:
             raise TypeError(f'Bad type for dev_type. Expect "DeviceType" or "int". got {type(dev_type)}')
         self._dev_type = dev_type.value
 
@@ -121,7 +116,7 @@ class BroadcastMsg(General, DeviceType):
         
     @property
     def payload(self):
-        return struct.pack(self.__PACK_FORMAT, self.cmd_id, self._broadcast, self._dev_type)
+        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self._broadcast, self._dev_type)
 
     @staticmethod
     def from_payload(payload:bytes)->'BroadcastMsg':
@@ -129,7 +124,7 @@ class BroadcastMsg(General, DeviceType):
         BroadcastMsg._check_cmd_id(cmd_id)
         return BroadcastMsg(broadcast, dev_type)
 
-class Handshake(General):
+class Handshake(CMD):
     #TODO description
     CMD_ID = 0X01   
     FRAME_TYPE: type = Frame.Type.CMD
@@ -155,19 +150,15 @@ class Handshake(General):
 
 class HandshakeResponse(Handshake):
     FRAME_TYPE = Frame.Type.AKN
-    __pack_format = '<BB' #cmd_id, #response code
+    __pack_format = '<B?' #cmd_id, #response code
 
-    def __init__(self, response:int):
+    def __init__(self, response:bool):
         super().__init__()
-        self._response = response.to_bytes(1, 'little')
-
-    @property
-    def response(self):
-        return int.from_bytes(self._response, 'little')
+        self.response = response
 
     @property
     def payload(self):
-        return struct.pack(self.__pack_format, self.CMD_ID, self._response)
+        return struct.pack(self.__pack_format, self.CMD_ID, self.response)
 
     @staticmethod
     def from_payload(payload: bytes):
@@ -175,7 +166,7 @@ class HandshakeResponse(Handshake):
         HandshakeResponse._check_cmd_id(cmd_id)
         return HandshakeResponse(code)
     
-class QueryDeviceInformation(General):
+class QueryDeviceInformation(CMD):
     CMD_ID = 0X02
     FRAME_TYPE = Frame.Type.CMD
     __PACK_FORMAT = '<B' #cmd_id
@@ -220,7 +211,7 @@ class QueryDeviceInformationResponse(QueryDeviceInformation):
         QueryDeviceInformationResponse._check_cmd_id(cmd_id)
         return QueryDeviceInformationResponse(response, firmware_version)
 
-class Heartbeat(General):
+class Heartbeat(CMD):
     CMD_ID = 0x03
     FRAME_TYPE = Frame.Type.CMD
     __PACK_FORMAT = '<B' #cmd_id
@@ -238,49 +229,40 @@ class Heartbeat(General):
         Heartbeat._check_cmd_id(cmd_id)
         return Heartbeat()
 
-class HeartbeatResponse(Heartbeat):
+class LidarFeature:
+    def __init__(self, rain_fog_suppression:bool):
+        self.rain_fog_suppresion = rain_fog_suppression
+
+    @property
+    def pack(self)->bytes:
+        result = 0
+        result = result | 1 if self.rain_fog_suppresion else result & ~1
+        return result.to_bytes(1, 'little')
+
+    def _lidarFeature_pars(self, nval:'LidarFeature|int'):
+        if type(nval) is int:
+            nval = LidarFeature(nval)
+        elif type(nval) is not LidarFeature:
+            raise TypeError('Bad type for LidarFeature')
+        self._lidarFeature = nval
+
+class HeartbeatResponse(Heartbeat, WorkState.Lidar, LidarFeature):
     FRAME_TYPE = Frame.Type.AKN
-    __PACK_FORMAT = '<BBBBI' #cmd_id, response, work_state, feature, ack_msg
-    
-    class Feature:
-        class Lidar:
-            def __init__(self, rain_fog_suppression:bool):
-                self.rain_fog_suppresion = rain_fog_suppression
-
-            @property
-            def pack(self)->bytes:
-                result = 0
-                result = result | 1 if self.rain_fog_suppresion else result & ~1
-                return result.to_bytes(1, 'little')
-
-            staticmethod
-            def unpack(data:bytes):
-                temp = int.from_bytes(data, 'little')
-                return HeartbeatResponse.Feature.Lidar(temp & 1)
+    __PACK_FORMAT = '<B?BBI' #cmd_id, response, work_state, feature, ack_msg
 
 
-    def __init__(self, response:int, work_state:'WorkState.Lidar|WorkState.Hub|int', feature:'Feature.Lidar|int', ack_msg:int):
+    def __init__(self, response:bool, work_state:'WorkState.Lidar|WorkState.Hub|int', feature:'LidarFeature|int', ack_msg:int):
         #TODO description
         super().__init__()
-        self._response = response.to_bytes(1, 'little')
-        if type(work_state) is int:
-            work_state = WorkState.Lidar(work_state)
-        self._work_state = work_state.value.to_bytes(1, 'little')
+        self.response = response
+        self._work_state_pars(work_state)
+        self._feature_parse
+
         if type(feature) is int:
             feature = self.Feature.Lidar(feature)
         self._feature = feature.pack
         self._ack_msg  = ack_msg.to_bytes(4, 'little')    
 
-    @property
-    def response(self)->int:
-        return int.from_bytes(self._response, 'little')
-
-    # @property
-    # def work_state(self)->'WorkState.Lidar|WorkState.Hub':
-    #     return 
-
-    # @property
-    # def feature
 
     @property
     def ack_msg(self):
@@ -297,7 +279,7 @@ class HeartbeatResponse(Heartbeat):
         HeartbeatResponse._check_cmd_id(cmd_id)
         return HeartbeatResponse(response, work_state, feature, ack_msg)
 
-class StartStopSampling(General):
+class StartStopSampling(CMD):
     CMD_ID = 0x04
     FRAME_TYPE = Frame.Type.CMD
     __PACK_FORMAT = '<B?' #cmd_id, is_start
@@ -338,7 +320,7 @@ class StartStopSamplingResponse(StartStopSampling):
         StartStopSamplingResponse._check_cmd_id(cmd_id)
         return StartStopSamplingResponse(response)
 
-class ChangeCoordinateSystem(General):
+class ChangeCoordinateSystem(CMD):
     CMD_ID = 0x05
     FRAME_TYPE = Frame.Type.CMD
     __PACK_FORMAT = '<BB' #cmd_id, coordinate_system
@@ -385,7 +367,7 @@ class ChangeCoordinateSystemResponse(ChangeCoordinateSystem):
         ChangeCoordinateSystemResponse._check_cmd_id(cmd_id)
         return ChangeCoordinateSystemResponse(response)
 
-class Disconnect(General):
+class Disconnect(CMD):
     CMD_ID = 0x06
     FRAME_TYPE = Frame.Type.CMD
     __PACK_FORMAT = '<B' #cmd_id
@@ -421,7 +403,7 @@ class DisconnectResponse(Disconnect):
         DisconnectResponse._check_cmd_id(cmd_id)
         return DisconnectResponse(response)
 
-class PushAbnormalStatusInformation(General):
+class PushAbnormalStatusInformation(CMD):
     CMD_ID = 0x07
     FRAME_TYPE = Frame.Type.MSG
     __PACK_FORMAT = '<BI' #cmd_id, status_code
@@ -448,7 +430,7 @@ class IpMode(enum.Enum):
     Dynamic = 0
     Static = 1
 
-class ConfigureStaticDynamicIp(General):
+class ConfigureStaticDynamicIp(CMD):
     CMD_ID = 0x08
     FRAME_TYPE = Frame.Type.CMD
     __PACK_FORM = '<BBII' #cmd_id, ip_mode, ip_addr, net_mask
@@ -564,7 +546,7 @@ class ConfigureStaticDynamicIpResponse(ConfigureStaticDynamicIp):
         ConfigureStaticDynamicIpResponse._check_cmd_id(cmd_id)
         return ConfigureStaticDynamicIpResponse(result)
 
-class GetDeviceIpInformation(General):
+class GetDeviceIpInformation(CMD):
     CMD_ID = 0x09
     FRAME_TYPE = Frame.Type.CMD
     __PACK_FORMAT = '<B' #cmd_id
@@ -639,7 +621,7 @@ class GetDeviceIpInformationResponse(GetDeviceIpInformation):
         GetDeviceIpInformationResponse._check_cmd_id(cmd_id)
         return GetDeviceIpInformation(result, ip_mode, ip, mask, gw)
 
-class RebootDevice(General):
+class RebootDevice(CMD):
     CMD_ID = 0x0a
     FRAME_TYPE = Frame.Type.CMD
     __PACK_FORMAT = '<BH' #cmd_id, timeout
@@ -676,7 +658,7 @@ class RebootDeviceResponse(RebootDevice):
         RebootDeviceResponse._check_cmd_id(cmd_id)
         return RebootDeviceResponse(result)
 
-class WriteConfigurationParameters(General):
+class WriteConfigurationParameters(CMD):
     CMD_ID = 0x0b
     FRAME_TYPE = Frame.Type.CMD
 
@@ -723,7 +705,7 @@ class WriteConfigurationParametersResponse(WriteConfigurationParameters):
         return WriteConfigurationParametersResponse(result, error_key, error_code)
 
 
-class ReadConfigurationParameters(General):
+class ReadConfigurationParameters(CMD):
     CMD_ID = 0x0C
     FRAME_TYPE = Frame.Type.CMD
     # __PACK_FORMAT = '<B'
