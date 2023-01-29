@@ -74,7 +74,7 @@ class Frame(abc.ABC):
 
     START = 0xAA
     VERSION = 0x01
-    FRAME_TYPE:Type = Type.CMD
+    CMD_TYPE:Type = Type.CMD
     HEADER_LENGTH = 9
     FRAME_CRC_LENGTH = 4
     FRAME_MAX_LENGTH = 1400
@@ -103,7 +103,7 @@ class Frame(abc.ABC):
         return (self.START.to_bytes(1, 'little')
             + self.VERSION.to_bytes(1, 'little')
             + length.to_bytes(2, 'little')
-            + self.FRAME_TYPE.value.to_bytes(1, 'little')
+            + self.CMD_TYPE.value.to_bytes(1, 'little')
             + self.seq.to_bytes(2, 'little')
         )
 
