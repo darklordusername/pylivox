@@ -234,7 +234,6 @@ class Heartbeat(General):
     def from_payload(payload:bytes):
         return Heartbeat()
 
-
 class HeartbeatResponse(General):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.HEARTBEAT
@@ -365,33 +364,33 @@ class StartStopSamplingResponse(General):
         return StartStopSamplingResponse(response)
 
 class ChangeCoordinateSystem(General):
-    CMD_ID = 0x05
-    FRAME_TYPE = Frame.Type.CMD
-    __PACK_FORMAT = '<BB' #cmd_id, coordinate_system
+    CMD_TYPE = Frame.Type.CMD
+    CMD_ID = Frame.SetGeneral.CHANGE_COORDINATE_SYSTEM
+    _PACK_FORMAT = '<?' #Is_Spherical_Coordinate?
 
-    class CoordinateSystem(enum.Enum):
-        Cartesian = 0
-        Spherical = 1
-
-    def __init__(self, coordinate_system:'CoordinateSystem|int'):
+    def __init__(self, is_spherical:bool):
         super().__init__()
-        if type(coordinate_system) is int:
-            coordinate_system = self.CoordinateSystem(coordinate_system) 
-        self._coordinate_system = coordinate_system
+        self.is_spherical = is_spherical
 
     @property
-    def coordinate_system(self)->CoordinateSystem:
-        return self.CoordinateSystem(self._coordinate_system)
+    def is_spherical(self)->bool:
+        return self._is_spherical
+
+    @is_spherical.setter
+    def is_spherical(self, value:bool):
+        if type(value) is not bool:
+            raise TypeError
+        self._is_spherical = value
     
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self._coordinate_system)
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_spherical)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, coordinate_system = struct.unpack(ChangeCoordinateSystem.__PACK_FORMAT, payload)
-        ChangeCoordinateSystem._check_cmd_id(cmd_id)
-        return ChangeCoordinateSystem(coordinate_system)
+        is_spherical, = struct.unpack(ChangeCoordinateSystem._PACK_FORMAT, payload)
+        return ChangeCoordinateSystem(is_spherical)
 
 class ChangeCoordinateSystemResponse(ChangeCoordinateSystem):
     FRAME_TYPE = Frame.Type.AKN
