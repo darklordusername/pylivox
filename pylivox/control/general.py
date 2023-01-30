@@ -567,75 +567,33 @@ class ConfigureStaticDynamicIp(General):
         is_static, ip, mask, gw = struct.unpack(ConfigureStaticDynamicIp._PACK_FORM, payload)
         return ConfigureStaticDynamicIp(is_static, ip, mask, gw)
 
-class ConfigureStaticDynamicIpResponse(ConfigureStaticDynamicIp):
-    FRAME_TYPE = Frame.Type.CMD
-    __PACK_FORMAT = '<BBIII' #cmd_id, ip_mode, ip, mask, gw
-
-    def __init__(self, ip_mode:'IpMode|int', ip:'ipaddress.IPv4Address|int|str', mask:'ipaddress.IPv4Address|int|str', gw:'ipaddress.IPv4Address|int|str'):
-        super().__init__()
-        if type(ip_mode) is int:
-            ip_mode = IpMode(ip_mode)
-        elif type(ip_mode) is not IpMode:
-            raise TypeError(f'Bad type of ip_mode. Expected "IpMode" or "str". Got {type(ip_mode)}')
-        self._ip_mode = ip_mode.value
-        if type(ip) is int or type(ip) is str:
-            ip = ipaddress.IPv4Address(ip)
-        elif type(ip) is not ipaddress.IPv4Address:
-            raise TypeError(f'Bad type of ip. Expected "IPv4Address" or "int" or "str". Got {type(ip)} ')
-        self._ip = int(ip)
-        if type(mask) is int or type(mask) is str:
-            mask = ipaddress.IPv4Address(mask)
-        elif type(mask) is not ipaddress.IPv4Address:
-            raise TypeError(f'Bad type of mask. Expected "IPv4Address" or "int" or "str". Got {type(mask)} ')
-        self._mask = int(mask)
-        if type(gw) is int or type(gw) is str:
-            gw = ipaddress.IPv4Address(gw)
-        elif type(gw) is not ipaddress.IPv4Address:
-            raise TypeError(f'Bad type of gw. Expected "IPv4Address" or "int" or "str". Got {type(gw)} ')
-        self._gw = int(gw)
-    
-    @property
-    def ip_mode(self)->IpMode:
-        return IpMode(self._ip_mode)
-
-    @property
-    def ip(self)->ipaddress.IPv4Address:
-        return ipaddress.IPv4Address(self._ip)
-
-    @property
-    def mask(self)->ipaddress.IPv4Address:
-        return ipaddress.IPv4Address(self._mask)
-
-    @property
-    def gw(self)->ipaddress.IPv4Address:
-        return ipaddress.IPv4Address(self._gw)
-
-    @property
-    def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self._ip_mode, self._ip, self._mask, self._gw)
-
-    @staticmethod
-    def from_payload(payload:bytes):
-        cmd_id, ip_mode, ip, mask, gw = struct.unpack(ConfigureStaticDynamicIpResponse.__PACK_FORMAT, payload)
-        ConfigureStaticDynamicIpResponse._check_cmd_id(cmd_id)
-        return ConfigureStaticDynamicIpResponse(ip_mode, ip, mask, gw)
-
-class ConfigureStaticDynamicIpResponse(ConfigureStaticDynamicIp):
-    FRAME_TYPE = Frame.Type.AKN
-    __PACK_FORMAT = '<B?' #cmd_id, result
+class ConfigureStaticDynamicIpResponse(General):
+    CMD_TYPE = Frame.Type.AKN
+    CMD_ID = Frame.SetGeneral.CONFIGURE_STATIC_DYNAMIC_IP
+    _PACK_FORMAT = '<?' # result
 
     def __init__(self, result:bool):
         super().__init__()
         self.result = result
 
+    @property 
+    def result(self)->bool:
+        return self._result
+
+    @result.setter
+    def result(self, value:bool):
+        if type(value) is not bool:
+            raise TypeError
+        self._result = value
+
     @property
     def payload(self)->bytes:
-        return struct.pack(self._PACK_FORM, self.CMD_ID, self.result)    
+        payload_body = struct.pack(self._PACK_FORMAT, self.result)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, result = struct.unpack(ConfigureStaticDynamicIpResponse._PACK_FORM, payload)
-        ConfigureStaticDynamicIpResponse._check_cmd_id(cmd_id)
+        result, = struct.unpack(ConfigureStaticDynamicIpResponse._PACK_FORMAT, payload)
         return ConfigureStaticDynamicIpResponse(result)
 
 class GetDeviceIpInformation(General):
@@ -660,36 +618,36 @@ class GetDeviceIpInformationResponse(GetDeviceIpInformation):
     FRAME_TYPE = Frame.Type.AKN
     __PACK_FORMAT = '<BBBIII' #cmd_id, result, ip_mode, ip, mask, gw
 
-    def __init__(self, result:bool, ip_mode:'IpMode|int', 
+    def __init__(self, result:bool, is_static:bool, 
                     ip:'ipaddress.IPv4Address|str|int', mask:'ipaddress.IPv4Address|str|int', gw:'ipaddress.IPv4Address|str|int' ):
         super().__init__()
-        if type(result) is not bool:
-            raise TypeError(f'Bad type for result. Expect "bool". Got {type(result)}')
-        self.result = result
-        if type(ip_mode) is int:
-            ip_mode = IpMode(ip_mode)
-        elif type(ip_mode) is not IpMode:
-            raise TypeError(f'Bad type for ip_mode. Expect "IpMode" or "int". Got {type(ip_mode)}')
-        self._ip_mode = ip_mode.value
-        if type(ip) is int or type(ip) is str:
-            ip = ipaddress.IPv4Address(ip)
-        elif type(ip) is not ipaddress.IPv4Address:
-            raise TypeError(f'Bad type for ip. Expect "IPv4Address" or "int" or "str". Got {type(ip)}')
-        self._ip = ip
-        if type(mask) is int or type(mask) is str:
-            mask = ipaddress.IPv4Address(mask)
-        elif type(mask) is not ipaddress.IPv4Address:
-            raise TypeError(f'Bad type for mask. Expect "IPv4Address" or "int" or "str". Got {type(mask)}')
-        self._mask = mask 
-        if type(gw) is int or type(gw) is str:
-            gw = ipaddress.IPv4Address(gw)
-        elif type(gw) is not ipaddress.IPv4Address:
-            raise TypeError(f'Bad type for gw. Expect "IPv4Address" or "int" or "str". Got {type(gw)}')
-        self._gw = gw
+        # if type(result) is not bool:
+        #     raise TypeError(f'Bad type for result. Expect "bool". Got {type(result)}')
+        # self.result = result
+        # if type(ip_mode) is int:
+        #     ip_mode = IpMode(ip_mode)
+        # elif type(ip_mode) is not IpMode:
+        #     raise TypeError(f'Bad type for ip_mode. Expect "IpMode" or "int". Got {type(ip_mode)}')
+        # self._ip_mode = ip_mode.value
+        # if type(ip) is int or type(ip) is str:
+        #     ip = ipaddress.IPv4Address(ip)
+        # elif type(ip) is not ipaddress.IPv4Address:
+        #     raise TypeError(f'Bad type for ip. Expect "IPv4Address" or "int" or "str". Got {type(ip)}')
+        # self._ip = ip
+        # if type(mask) is int or type(mask) is str:
+        #     mask = ipaddress.IPv4Address(mask)
+        # elif type(mask) is not ipaddress.IPv4Address:
+        #     raise TypeError(f'Bad type for mask. Expect "IPv4Address" or "int" or "str". Got {type(mask)}')
+        # self._mask = mask 
+        # if type(gw) is int or type(gw) is str:
+        #     gw = ipaddress.IPv4Address(gw)
+        # elif type(gw) is not ipaddress.IPv4Address:
+        #     raise TypeError(f'Bad type for gw. Expect "IPv4Address" or "int" or "str". Got {type(gw)}')
+        # self._gw = gw
 
-    @property
-    def ip_mode(self)->IpMode:
-        return IpMode(self._ip_mode)
+    # @property
+    # def ip_mode(self)->IpMode:
+    #     return IpMode(self._ip_mode)
     
     @property
     def ip(self)->ipaddress.IPv4Address:
