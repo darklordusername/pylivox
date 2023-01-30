@@ -214,32 +214,25 @@ class QueryDeviceInformation(General):
     def from_payload(payload:bytes):
         return QueryDeviceInformation()
 
-class QueryDeviceInformationResponse(QueryDeviceInformation):
-    FRAME_TYPE = Frame.Type.AKN
-    __PACK_FORMAT = '<BBI' #cmd_id, response code, firmware version
+class QueryDeviceInformationResponse(General):
+    CMD_TYPE = Frame.Type.AKN
+    CMD_ID = Frame.SetGeneral.QUERY_DEVICE_INFORMATION
+    _PACK_FORMAT = '<?I' #result, firmware version
 
-    def __init__(self, response:int, firmware_version:int):
+    def __init__(self, result:bool, firmware_version:int):
         super().__init__()
-        self._response = response.to_bytes(1, 'little')
-        self._firmware_version = firmware_version.to_bytes(4, 'little')
-
-    @property
-    def response(self):
-        return int.from_bytes(self._response, 'little')
-
-    @property
-    def firmware_version(self):
-        return int.from_bytes(self._firmware_version, 'little')
+        self.result = bool(result)
+        self.firmware_version = firmware_version
 
     @property
     def payload(self):
-        return struct.pack(self.__PACK_FORMAT, self._response, self._firmware_version)
+        payload_body = struct.pack(self._PACK_FORMAT, self.result, self.firmware_version)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, response, firmware_version = struct.unpack(QueryDeviceInformationResponse.__PACK_FORMAT, payload)
-        QueryDeviceInformationResponse._check_cmd_id(cmd_id)
-        return QueryDeviceInformationResponse(response, firmware_version)
+        result, firmware_version = struct.unpack(QueryDeviceInformationResponse._PACK_FORMAT, payload)
+        return QueryDeviceInformationResponse(result, firmware_version)
 
 class Heartbeat(General):
     CMD_ID = 0x03
