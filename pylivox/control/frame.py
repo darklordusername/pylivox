@@ -127,6 +127,14 @@ class Frame(abc.ABC):
     def from_frame_set_type_value(cmd_set, cmd_type, cmd_id):
         pass
 
+    @staticmethod
+    def crc_header(data:bytes):
+        return crc16(data)
+    
+    @staticmethod
+    def crc(data:bytes):
+        return crc32(data)
+
 
     def __repr__(self):
         return f'{{{self.__class__.__name__}}}'

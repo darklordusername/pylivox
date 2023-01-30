@@ -10,15 +10,16 @@ import ipaddress
 from pylivox.control.frame import Frame
 
 class CMD(Frame):
-    #TODO description 
     CMD_SET = None
     CMD_ID = None
 
-    def __init__(self):
-        #TODO description
-        super().__init__()
-        self.cmd_set = self.CMD_SET
-        self.cmd_id = None
+    def payload(self, payload_body:bytes):
+        format = f'<BB{len(payload_body)}B' #CMD_SET, CMD_ID, BODY
+        return struct.pack(format, self.CMD_SET.value, self.CMD_ID.value, *payload_body )
+
+class General(CMD):
+    CMD_SET = Frame.Set.GENERAL
+
 
 class WorkState():
     class Lidar:
@@ -65,7 +66,9 @@ class DeviceType():
     def device_type(self)-> 'DeviceType.Enum':
         return self.Enum(self._device_type)
 
-class BroadcastMsg(CMD, DeviceType):
+
+
+class BroadcastMsg(General, DeviceType):
     CMD_ID = 0
     CMD_TYPE = Frame.Type.MSG
 
@@ -124,11 +127,10 @@ class BroadcastMsg(CMD, DeviceType):
         BroadcastMsg._check_cmd_id(cmd_id)
         return BroadcastMsg(broadcast, dev_type)
 
-class Handshake(CMD):
+class Handshake(General):
     #TODO description
-    CMD_ID = 0X01   
-    FRAME_TYPE: type = Frame.Type.CMD
-    __PACK_FORMAT = '<BIHHH' #cmd_id, ip, poin_port, cmd_port, imu_port 
+    CMD_ID = Frame.SetGeneral.HANDSHAKE
+    __PACK_FORMAT = '<IHHH' #ip, poin_port, cmd_port, imu_port 
 
     def __init__(self, ip:ipaddress.IPv4Address, point_port:int, cmd_port:int, imu_port:int):
         #TODO description
@@ -140,12 +142,44 @@ class Handshake(CMD):
 
     @property
     def payload(self):
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, int(self.ip), self.point_port, self.cmd_port, self.imu_port )
+        payload_body = struct.pack(self.__PACK_FORMAT, int(self.ip), self.point_port, self.cmd_port, self.imu_port )
+        return super().payload(payload_body)
+
+    @property
+    def ip(self)->ipaddress.IPv4Address:
+        return self._ip
+    
+    @ip.setter
+    def ip(self, val:'ipaddress.IPv4Address|str'):
+        if type(val) is str:
+            val = ipaddress.IPv4Address(val)
+        elif type(val) is not ipaddress.IPv4Address:
+            raise TypeError
+        self._ip = val
+    
+    @property
+    def cmd_port(self)->int:
+        return self._cmd_port
+
+    @cmd_port.setter
+    def cmd_port(self, val:int):
+        if val < 0 or val > 2**16:
+            raise ValueError
+        self._cmd_port = val
+
+    @property 
+    def imu_port(self)->int:
+        return self._imu_port
+
+    @imu_port.setter
+    def imu_port(self, val:int):
+        if val < 0 or val > 2**16:
+            raise ValueError
+        self._imu_port = val
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, ip_int, point_port, cmd_port, imu_port = struct.unpack(Handshake.__PACK_FORMAT, payload)
-        Handshake._check_cmd_id(cmd_id)
+        ip_int, point_port, cmd_port, imu_port = struct.unpack(Handshake.__PACK_FORMAT, payload)
         return Handshake(ipaddress.IPv4Address(ip_int), point_port, cmd_port, imu_port)
 
 class HandshakeResponse(Handshake):
@@ -166,7 +200,7 @@ class HandshakeResponse(Handshake):
         HandshakeResponse._check_cmd_id(cmd_id)
         return HandshakeResponse(code)
     
-class QueryDeviceInformation(CMD):
+class QueryDeviceInformation(General):
     CMD_ID = 0X02
     FRAME_TYPE = Frame.Type.CMD
     __PACK_FORMAT = '<B' #cmd_id
@@ -211,7 +245,7 @@ class QueryDeviceInformationResponse(QueryDeviceInformation):
         QueryDeviceInformationResponse._check_cmd_id(cmd_id)
         return QueryDeviceInformationResponse(response, firmware_version)
 
-class Heartbeat(CMD):
+class Heartbeat(General):
     CMD_ID = 0x03
     FRAME_TYPE = Frame.Type.CMD
     __PACK_FORMAT = '<B' #cmd_id
@@ -279,7 +313,7 @@ class HeartbeatResponse(Heartbeat, WorkState.Lidar, LidarFeature):
         HeartbeatResponse._check_cmd_id(cmd_id)
         return HeartbeatResponse(response, work_state, feature, ack_msg)
 
-class StartStopSampling(CMD):
+class StartStopSampling(General):
     CMD_ID = 0x04
     FRAME_TYPE = Frame.Type.CMD
     __PACK_FORMAT = '<B?' #cmd_id, is_start
@@ -320,7 +354,7 @@ class StartStopSamplingResponse(StartStopSampling):
         StartStopSamplingResponse._check_cmd_id(cmd_id)
         return StartStopSamplingResponse(response)
 
-class ChangeCoordinateSystem(CMD):
+class ChangeCoordinateSystem(General):
     CMD_ID = 0x05
     FRAME_TYPE = Frame.Type.CMD
     __PACK_FORMAT = '<BB' #cmd_id, coordinate_system
@@ -367,7 +401,7 @@ class ChangeCoordinateSystemResponse(ChangeCoordinateSystem):
         ChangeCoordinateSystemResponse._check_cmd_id(cmd_id)
         return ChangeCoordinateSystemResponse(response)
 
-class Disconnect(CMD):
+class Disconnect(General):
     CMD_ID = 0x06
     FRAME_TYPE = Frame.Type.CMD
     __PACK_FORMAT = '<B' #cmd_id
@@ -403,7 +437,7 @@ class DisconnectResponse(Disconnect):
         DisconnectResponse._check_cmd_id(cmd_id)
         return DisconnectResponse(response)
 
-class PushAbnormalStatusInformation(CMD):
+class PushAbnormalStatusInformation(General):
     CMD_ID = 0x07
     FRAME_TYPE = Frame.Type.MSG
     __PACK_FORMAT = '<BI' #cmd_id, status_code
@@ -430,7 +464,7 @@ class IpMode(enum.Enum):
     Dynamic = 0
     Static = 1
 
-class ConfigureStaticDynamicIp(CMD):
+class ConfigureStaticDynamicIp(General):
     CMD_ID = 0x08
     FRAME_TYPE = Frame.Type.CMD
     __PACK_FORM = '<BBII' #cmd_id, ip_mode, ip_addr, net_mask
@@ -546,7 +580,7 @@ class ConfigureStaticDynamicIpResponse(ConfigureStaticDynamicIp):
         ConfigureStaticDynamicIpResponse._check_cmd_id(cmd_id)
         return ConfigureStaticDynamicIpResponse(result)
 
-class GetDeviceIpInformation(CMD):
+class GetDeviceIpInformation(General):
     CMD_ID = 0x09
     FRAME_TYPE = Frame.Type.CMD
     __PACK_FORMAT = '<B' #cmd_id
@@ -621,7 +655,7 @@ class GetDeviceIpInformationResponse(GetDeviceIpInformation):
         GetDeviceIpInformationResponse._check_cmd_id(cmd_id)
         return GetDeviceIpInformation(result, ip_mode, ip, mask, gw)
 
-class RebootDevice(CMD):
+class RebootDevice(General):
     CMD_ID = 0x0a
     FRAME_TYPE = Frame.Type.CMD
     __PACK_FORMAT = '<BH' #cmd_id, timeout
@@ -658,7 +692,7 @@ class RebootDeviceResponse(RebootDevice):
         RebootDeviceResponse._check_cmd_id(cmd_id)
         return RebootDeviceResponse(result)
 
-class WriteConfigurationParameters(CMD):
+class WriteConfigurationParameters(General):
     CMD_ID = 0x0b
     FRAME_TYPE = Frame.Type.CMD
 
@@ -705,7 +739,7 @@ class WriteConfigurationParametersResponse(WriteConfigurationParameters):
         return WriteConfigurationParametersResponse(result, error_key, error_code)
 
 
-class ReadConfigurationParameters(CMD):
+class ReadConfigurationParameters(General):
     CMD_ID = 0x0C
     FRAME_TYPE = Frame.Type.CMD
     # __PACK_FORMAT = '<B'

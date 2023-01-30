@@ -71,11 +71,11 @@ def FrameFrom(frame:bytes)->Frame:
     frame_payload = frame[11:-4]
     frame_crc = int.from_bytes(frame[-4:], 'little')
     assert len(frame) < Frame.FRAME_MAX_LENGTH
-    assert frame_crc == Frame.crc32(frame[:-4])
-    assert header_crc == Frame.crc16(header)
+    assert frame_crc == Frame.crc(frame[:-4])
+    assert header_crc == Frame.crc_header(header)
     #Check header 
     start, version, length, cmd_type, seq = struct.unpack('<BBHBH', header)
     assert start == Frame.START
     assert version == Frame.VERSION
-    T = Frame.TypeDict[cmd_set, cmd_type, cmd_id]
+    T = TypeDict[cmd_set, cmd_type, cmd_id]
     return T.from_payload(frame_payload)
