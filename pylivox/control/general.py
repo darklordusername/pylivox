@@ -693,22 +693,32 @@ class GetDeviceIpInformationResponse(General):
         return GetDeviceIpInformationResponse(result, is_static, ip, mask, gw)
 
 class RebootDevice(General):
-    CMD_ID = 0x0a
-    FRAME_TYPE = Frame.Type.CMD
-    __PACK_FORMAT = '<BH' #cmd_id, timeout
+    CMD_TYPE = Frame.Type.CMD
+    CMD_ID = Frame.SetGeneral.REBOOT_DEVICE
+    _PACK_FORMAT = '<H' #timeout
 
     def __init__(self, timeout:int):
         super().__init__()
         self.timeout = timeout
 
     @property
+    def timeout(self)->int:
+        return self._timeout
+
+    @timeout.setter
+    def timeout(self, value:int):
+        if type(value) is not int:
+            raise TypeError
+        self._timeout = value
+
+    @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self.timeout)
+        payload_body = struct.pack(self._PACK_FORMAT, self.timeout)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, timeout = struct.unpack(RebootDevice.__PACK_FORMAT, payload)
-        RebootDevice._check_cmd_id(cmd_id)
+        timeout, = struct.unpack(RebootDevice._PACK_FORMAT, payload)
         return RebootDevice(timeout)
 
 class RebootDeviceResponse(RebootDevice):
