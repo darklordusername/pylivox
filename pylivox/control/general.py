@@ -597,21 +597,15 @@ class ConfigureStaticDynamicIpResponse(General):
         return ConfigureStaticDynamicIpResponse(result)
 
 class GetDeviceIpInformation(General):
-    CMD_ID = 0x09
-    FRAME_TYPE = Frame.Type.CMD
-    __PACK_FORMAT = '<B' #cmd_id
-
-    def __init__(self):
-        super().__init__()
+    CMD_TYPE = Frame.Type.CMD
+    CMD_ID = Frame.SetGeneral.GET_DEVICE_IP_INFORMATION
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID)
+        return super().payload(b'')
 
     @staticmethod
     def from_payload(payload):
-        cmd_id = struct.unpack(GetDeviceIpInformation.__PACK_FORMAT, payload)
-        GetDeviceIpInformation._check_cmd_id(cmd_id)
         return GetDeviceIpInformation()
 
 class GetDeviceIpInformationResponse(GetDeviceIpInformation):
