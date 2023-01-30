@@ -422,21 +422,15 @@ class ChangeCoordinateSystemResponse(General):
         return ChangeCoordinateSystemResponse(result)
 
 class Disconnect(General):
-    CMD_ID = 0x06
-    FRAME_TYPE = Frame.Type.CMD
-    __PACK_FORMAT = '<B' #cmd_id
-
-    def __init__(self):
-        super().__init__()
+    CMD_TYPE = Frame.Type.CMD
+    CMD_ID = Frame.SetGeneral.DISCONNECT
 
     @property
     def payload(self):
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID)
+        return super().payload(b'')
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id = struct.unpack(Disconnect.__PACK_FORMAT, payload)
-        Disconnect._check_cmd_id(cmd_id)
         return Disconnect()
 
 class DisconnectResponse(Disconnect):
