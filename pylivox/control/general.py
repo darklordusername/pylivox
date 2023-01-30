@@ -608,62 +608,89 @@ class GetDeviceIpInformation(General):
     def from_payload(payload):
         return GetDeviceIpInformation()
 
-class GetDeviceIpInformationResponse(GetDeviceIpInformation):
-    FRAME_TYPE = Frame.Type.AKN
-    __PACK_FORMAT = '<BBBIII' #cmd_id, result, ip_mode, ip, mask, gw
+class GetDeviceIpInformationResponse(General):
+    CMD_TYPE = Frame.Type.AKN
+    CMD_ID = Frame.SetGeneral.GET_DEVICE_IP_INFORMATION
+    _PACK_FORMAT = '<??III' #result, is_static, ip, mask, gw
 
-    def __init__(self, result:bool, is_static:bool, 
-                    ip:'ipaddress.IPv4Address|str|int', mask:'ipaddress.IPv4Address|str|int', gw:'ipaddress.IPv4Address|str|int' ):
+    def __init__(self, 
+                    result:bool, 
+                    is_static:bool, 
+                    ip:'ipaddress.IPv4Address|str|int', 
+                    mask:'ipaddress.IPv4Address|str|int', 
+                    gw:'ipaddress.IPv4Address|str|int' ):
         super().__init__()
-        # if type(result) is not bool:
-        #     raise TypeError(f'Bad type for result. Expect "bool". Got {type(result)}')
-        # self.result = result
-        # if type(ip_mode) is int:
-        #     ip_mode = IpMode(ip_mode)
-        # elif type(ip_mode) is not IpMode:
-        #     raise TypeError(f'Bad type for ip_mode. Expect "IpMode" or "int". Got {type(ip_mode)}')
-        # self._ip_mode = ip_mode.value
-        # if type(ip) is int or type(ip) is str:
-        #     ip = ipaddress.IPv4Address(ip)
-        # elif type(ip) is not ipaddress.IPv4Address:
-        #     raise TypeError(f'Bad type for ip. Expect "IPv4Address" or "int" or "str". Got {type(ip)}')
-        # self._ip = ip
-        # if type(mask) is int or type(mask) is str:
-        #     mask = ipaddress.IPv4Address(mask)
-        # elif type(mask) is not ipaddress.IPv4Address:
-        #     raise TypeError(f'Bad type for mask. Expect "IPv4Address" or "int" or "str". Got {type(mask)}')
-        # self._mask = mask 
-        # if type(gw) is int or type(gw) is str:
-        #     gw = ipaddress.IPv4Address(gw)
-        # elif type(gw) is not ipaddress.IPv4Address:
-        #     raise TypeError(f'Bad type for gw. Expect "IPv4Address" or "int" or "str". Got {type(gw)}')
-        # self._gw = gw
+        self.result = result
+        self.is_static = is_static
+        self.ip = ip
+        self.mask = mask
+        self.gw = gw
 
-    # @property
-    # def ip_mode(self)->IpMode:
-    #     return IpMode(self._ip_mode)
+    @property
+    def result(self)->bool:
+        return self._result
     
+    @result.setter
+    def result(self, value:bool):
+        if type(value) is not bool:
+            raise TypeError
+        self._result = value
+
+    @property
+    def is_static(self)->bool:
+        return self._is_static
+
+    @is_static.setter
+    def is_static(self, value:bool):
+        if type(value) is not bool:
+            raise TypeError
+        self._is_static = value
+
     @property
     def ip(self)->ipaddress.IPv4Address:
-        return ipaddress.IPv4Address(self._ip)
-    
+        return self._ip
+
+    @ip.setter
+    def ip(self, value:'ipaddress.IPv4Address|int|str'):
+        if type(value) is int or type(value) is str:
+            value = ipaddress.IPv4Address(value)
+        elif type(value) is not ipaddress.IPv4Address:
+            raise TypeError
+        self._ip = value
+
     @property
     def mask(self)->ipaddress.IPv4Address:
-        return ipaddress.IPv4Address(self._mask)
+        return self._mask
+
+    @mask.setter
+    def mask(self, value:'ipaddress.IPv4Address|int|str'):
+        if type(value) is int or type(value) is str:
+            value = ipaddress.IPv4Address(value)
+        elif type(value) is not ipaddress.IPv4Address:
+            raise TypeError
+        self._mask = value
 
     @property
     def gw(self)->ipaddress.IPv4Address:
-        return ipaddress.IPv4Address(self._gw)
+        return self._gw
+
+    @gw.setter
+    def gw(self, value:'ipaddress.IPv4Address|int|str'):
+        if type(value) is int or type(value) is str:
+            value = ipaddress.IPv4Address(value)
+        elif type(value) is not ipaddress.IPv4Address:
+            raise TypeError
+        self._gw = value
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self.result, self._ip_mode, self._ip, self._mask, self._gw)
+        payload_body = struct.pack(self._PACK_FORMAT, self.result, self.is_static, int(self.ip), int(self.mask), int(self.gw))
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload):
-        cmd_id, result, ip_mode, ip, mask, gw = struct.unpack(GetDeviceIpInformationResponse.__PACK_FORMAT, payload)
-        GetDeviceIpInformationResponse._check_cmd_id(cmd_id)
-        return GetDeviceIpInformation(result, ip_mode, ip, mask, gw)
+        result, is_static, ip, mask, gw = struct.unpack(GetDeviceIpInformationResponse._PACK_FORMAT, payload)
+        return GetDeviceIpInformationResponse(result, is_static, ip, mask, gw)
 
 class RebootDevice(General):
     CMD_ID = 0x0a
