@@ -392,23 +392,34 @@ class ChangeCoordinateSystem(General):
         is_spherical, = struct.unpack(ChangeCoordinateSystem._PACK_FORMAT, payload)
         return ChangeCoordinateSystem(is_spherical)
 
-class ChangeCoordinateSystemResponse(ChangeCoordinateSystem):
-    FRAME_TYPE = Frame.Type.AKN
-    __PACK_FORMAT = '<B?' #cmd_id, response
+class ChangeCoordinateSystemResponse(General):
+    CMD_TYPE = Frame.Type.AKN
+    CMD_ID = Frame.SetGeneral.CHANGE_COORDINATE_SYSTEM
+    _PACK_FORMAT = '<?' #result
 
-    def __inti__(self, response:bool):
+    def __init__(self, result:bool):
         super().__init__()
-        self.response = response
+        self.result = result
+    
+    @property
+    def result(self)->bool:
+        return self._result
+
+    @result.setter
+    def result(self, value:bool):
+        if type(value) is not bool:
+            raise TypeError
+        self._result = value
 
     @property
     def payload(self):
-        return struct.pack(self.__PACK_FORMAT, self.response)
+        payload_body = struct.pack(self._PACK_FORMAT, self.result)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, response = struct.unpack(ChangeCoordinateSystemResponse.__PACK_FORMAT, payload)
-        ChangeCoordinateSystemResponse._check_cmd_id(cmd_id)
-        return ChangeCoordinateSystemResponse(response)
+        result, = struct.unpack(ChangeCoordinateSystemResponse._PACK_FORMAT, payload)
+        return ChangeCoordinateSystemResponse(result)
 
 class Disconnect(General):
     CMD_ID = 0x06
