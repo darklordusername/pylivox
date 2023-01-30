@@ -485,54 +485,87 @@ class PushAbnormalStatusInformation(General):
         PushAbnormalStatusInformation._check_cmd_id(cmd_id)
         return PushAbnormalStatusInformation(status_code)
 
-class IpMode(enum.Enum):
-    Dynamic = 0
-    Static = 1
-
 class ConfigureStaticDynamicIp(General):
-    CMD_ID = 0x08
-    FRAME_TYPE = Frame.Type.CMD
-    __PACK_FORM = '<BBII' #cmd_id, ip_mode, ip_addr, net_mask
+    CMD_TYPE = Frame.Type.CMD
+    CMD_ID = Frame.SetGeneral.CONFIGURE_STATIC_DYNAMIC_IP
+    _PACK_FORM = '<?III' #is_static, ip_addr, net_mask, gw
 
-    def __init__(self, ip_mode:'IpMode|int', ip:'ipaddress.IPv4Address|int|str', mask:'ipaddress.IPv4Address|int|str'):
+    def __init__(self, 
+                    is_static:bool, 
+                    ip:'ipaddress.IPv4Address|int|str', 
+                    mask:'ipaddress.IPv4Address|int|str',
+                    gw:'ipaddress.IPv4Address|int|str'):
         super().__init__()
-        if type(ip_mode) is int:
-            ip_mode = IpMode(ip_mode)
-        elif type(ip_mode) is not IpMode:
-            raise TypeError(f'Bad type for ip_mode. Expected "IpMode" or "int". Got {type(ip_mode)}')
-        self._ip_mode = ip_mode.value
-        if type(ip) is str or type(ip) is int:
-            ip = ipaddress.IPv4Address(ip)
-        elif type(ip) is not ipaddress.IPv4Address:
-            raise TypeError(f'Bad tpe of ip. Expected "str" or "IPv4Address" or "int". Got {type(ip)}')
-        self._ip = int(ip)
-        if type(mask) is str or type(mask) is int:
-            mask = ipaddress.IPv4Address(mask)
-        elif type(mask) is not ipaddress.IPv4Address:
-            raise TypeError(f'Bad tpe of mask. Expected "str" or "IPv4Address" or "int". Got {type(mask)}')
-        self._ip = int(mask)
+        self.is_static = is_static
+        self.ip = ip
+        self.mask = mask
+        self.gw = gw
 
     @property
-    def ip_mode(self)->IpMode:
-        return IpMode(self._ip_mode)
+    def is_static(self)->bool:
+        return self._is_static
+
+    @is_static.setter
+    def is_static(self, value:bool):
+        if type(value) is not bool:
+            raise TypeError
+        self._is_static = value
 
     @property
     def ip(self)->ipaddress.IPv4Address:
-        return ipaddress.IPv4Address(self._ip)
+        return self._ip
 
+    @ip.setter
+    def ip(self, value:'ipaddress.IPv4Address|int|str'):
+        if type(value) is int or type(value) is str:
+            value = ipaddress.IPv4Address(value)
+        elif type(value) is not ipaddress.IPv4Address:
+            raise TypeError
+        self._ip = value
+    
     @property
     def mask(self)->ipaddress.IPv4Address:
-        return ipaddress.IPv4Address(self.mask)
+        return self._mask
+
+    @mask.setter
+    def mask(self, value:'ipaddress.IPv4Address|int|str'):
+        if type(value) is int or type(value) is str:
+            value = ipaddress.IPv4Address(value)
+        elif type(value) is not ipaddress.IPv4Address:
+            raise TypeError
+        self._mask = value
+
+    @property
+    def gw(self)->ipaddress.IPv4Address:
+        return self._gw
+
+    @gw.setter
+    def gw(self, value:'ipaddress.IPv4Address|int|str'):
+        if type(value) is int or type(value) is str:
+            value = ipaddress.IPv4Address(value)
+        elif type(value) is not ipaddress.IPv4Address:
+            raise TypeError
+        self._gw = value
+
+    @property
+    def is_static(self)->bool:
+        return self._is_static
+
+    @is_static.setter
+    def is_static(self, value:bool):
+        if type(value) is not bool:
+            raise TypeError
+        self._is_static = value
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORM, self.CMD_ID, self._ip_mode, self._ip, self.mask)
+        payload_body = struct.pack(self._PACK_FORM, self.is_static, int(self.ip), int(self.mask), int(self.gw))
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, ip_mode, ip, mask = struct.unpack(ConfigureStaticDynamicIp.__PACK_FORM, payload)
-        ConfigureStaticDynamicIp._check_cmd_id(cmd_id)
-        return ConfigureStaticDynamicIp(ip_mode, ip, mask)
+        is_static, ip, mask, gw = struct.unpack(ConfigureStaticDynamicIp._PACK_FORM, payload)
+        return ConfigureStaticDynamicIp(is_static, ip, mask, gw)
 
 class ConfigureStaticDynamicIpResponse(ConfigureStaticDynamicIp):
     FRAME_TYPE = Frame.Type.CMD
@@ -597,11 +630,11 @@ class ConfigureStaticDynamicIpResponse(ConfigureStaticDynamicIp):
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORM, self.CMD_ID, self.result)    
+        return struct.pack(self._PACK_FORM, self.CMD_ID, self.result)    
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, result = struct.unpack(ConfigureStaticDynamicIpResponse.__PACK_FORM, payload)
+        cmd_id, result = struct.unpack(ConfigureStaticDynamicIpResponse._PACK_FORM, payload)
         ConfigureStaticDynamicIpResponse._check_cmd_id(cmd_id)
         return ConfigureStaticDynamicIpResponse(result)
 
