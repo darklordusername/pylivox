@@ -235,21 +235,15 @@ class QueryDeviceInformationResponse(General):
         return QueryDeviceInformationResponse(result, firmware_version)
 
 class Heartbeat(General):
-    CMD_ID = 0x03
-    FRAME_TYPE = Frame.Type.CMD
-    __PACK_FORMAT = '<B' #cmd_id
-
-    def __init__(self):
-        super().__init__()
+    CMD_TYPE = Frame.Type.CMD
+    CMD_ID = Frame.SetGeneral.HEARTBEAT
 
     @property
     def payload(self):
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID)
+        return super().payload(b'')
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id = struct.unpack(Heartbeat.__PACK_FORMAT, payload)
-        Heartbeat._check_cmd_id(cmd_id)
         return Heartbeat()
 
 class LidarFeature:
