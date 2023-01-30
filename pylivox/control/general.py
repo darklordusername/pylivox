@@ -307,22 +307,32 @@ class HeartbeatResponse(General):
         return HeartbeatResponse(response, work_state, feature, ack_msg)
 
 class StartStopSampling(General):
-    CMD_ID = 0x04
-    FRAME_TYPE = Frame.Type.CMD
-    __PACK_FORMAT = '<B?' #cmd_id, is_start
+    CMD_TYPE = Frame.Type.CMD
+    CMD_ID = Frame.SetGeneral.START_STOP_SAMPLING
+    _PACK_FORMAT = '<?' #cmd_id, is_start
 
     def __init__(self, is_start:bool):
         super().__init__()
         self.is_start = is_start
+    
+    @property
+    def is_start(self)->bool:
+        return self._is_start
+
+    @is_start.setter
+    def is_start(self, value:bool):
+        if type(value) is not bool:
+            raise TypeError
+        self._is_start = value
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self.is_start)
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_start)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, is_start = struct.unpack(StartStopSampling.__PACK_FORMAT, payload)
-        StartStopSampling._check_cmd_id(cmd_id)
+        is_start = struct.unpack(StartStopSampling._PACK_FORMAT, payload)
         return StartStopSampling(bool(is_start))
 
 class StartStopSamplingResponse(StartStopSampling):
