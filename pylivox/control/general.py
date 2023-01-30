@@ -130,7 +130,8 @@ class BroadcastMsg(General, DeviceType):
 class Handshake(General):
     #TODO description
     CMD_ID = Frame.SetGeneral.HANDSHAKE
-    __PACK_FORMAT = '<IHHH' #ip, poin_port, cmd_port, imu_port 
+    CMD_TYPE = Frame.Type.CMD
+    _PACK_FORMAT = '<IHHH' #ip, poin_port, cmd_port, imu_port 
 
     def __init__(self, ip:ipaddress.IPv4Address, point_port:int, cmd_port:int, imu_port:int):
         #TODO description
@@ -142,7 +143,7 @@ class Handshake(General):
 
     @property
     def payload(self):
-        payload_body = struct.pack(self.__PACK_FORMAT, int(self.ip), self.point_port, self.cmd_port, self.imu_port )
+        payload_body = struct.pack(self._PACK_FORMAT, int(self.ip), self.point_port, self.cmd_port, self.imu_port )
         return super().payload(payload_body)
 
     @property
@@ -179,25 +180,26 @@ class Handshake(General):
 
     @staticmethod
     def from_payload(payload:bytes):
-        ip_int, point_port, cmd_port, imu_port = struct.unpack(Handshake.__PACK_FORMAT, payload)
+        ip_int, point_port, cmd_port, imu_port = struct.unpack(Handshake._PACK_FORMAT, payload)
         return Handshake(ipaddress.IPv4Address(ip_int), point_port, cmd_port, imu_port)
 
-class HandshakeResponse(Handshake):
-    FRAME_TYPE = Frame.Type.AKN
-    __pack_format = '<B?' #cmd_id, #response code
+class HandshakeResponse(General):
+    CMD_TYPE = Frame.Type.AKN
+    CMD_ID = Frame.SetGeneral.HANDSHAKE
+    _PACK_FORMAT = '<?' ##response code
 
-    def __init__(self, response:bool):
+    def __init__(self, result:bool):
         super().__init__()
-        self.response = response
+        self.response = result
 
     @property
     def payload(self):
-        return struct.pack(self.__pack_format, self.CMD_ID, self.response)
+        payload_body = struct.pack(self._PACK_FORMAT, self.response)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload: bytes):
-        cmd_id, code = struct.unpack(HandshakeResponse.__pack_format, payload)
-        HandshakeResponse._check_cmd_id(cmd_id)
+        code = struct.unpack(HandshakeResponse._PACK_FORMAT, payload)
         return HandshakeResponse(code)
     
 class QueryDeviceInformation(General):

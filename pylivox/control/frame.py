@@ -74,7 +74,7 @@ class Frame(abc.ABC):
 
     START = 0xAA
     VERSION = 0x01
-    CMD_TYPE:Type = Type.CMD
+    CMD_TYPE:Type = None
     HEADER_LENGTH = 9
     FRAME_CRC_LENGTH = 4
     FRAME_MAX_LENGTH = 1400

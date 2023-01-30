@@ -12,7 +12,7 @@ from pylivox.control.utils import FrameFrom
 def cmd_payload(payload:str):
     b = a2b_hex(payload.replace(' ', ''))
     array = bytearray(b)
-    assert len(b) == int.from_bytes(b[2:5], 'little')
+    assert len(b) == int.from_bytes(b[2:4], 'little')
     crc_header = Frame.crc_header(b[:Frame.HEADER_LENGTH-2]).to_bytes(2, 'little')
     for i in range(len(crc_header)):
         array[i+Frame.HEADER_LENGTH-len(crc_header)] = crc_header[i]
@@ -31,7 +31,7 @@ def cmd_payload(payload:str):
                                             'cmd_port'  : 0x3344,                                                                               #start, protocol version, length, cmd type, seq , head crc, cmd set, cmd id,    user ip, data port, cmd pro, imu port,             crc
                                             'imu_port'  : 0x5566,}                                                                , cmd_payload('aa     01                1900    00        0000  0000      00       01         0101a8c0 2211       4433     6655                  00000000')),
                                                                                                                                                                                                                                 #return code
-    # (g.HandshakeResponse                   , {'result'    : False}                                                                , cmd_payload('aa     01                0000    01        0000  0000      00       01         0000                                               00000000')),
+    (g.HandshakeResponse                   , {'result'    : False}                                                                , cmd_payload('aa     01                1000    01        0000  0000      00       01         00                                                 00000000')),
     #                                                                                                                                                                                                                             #
     # (g.QueryDeviceInformation              , {}                                                                                   , cmd_payload('aa     01                0000    01        0000  0000      00       01                                                                00000000')),
     #                                                                                                                                                                                                                             #
