@@ -750,55 +750,268 @@ class RebootDeviceResponse(General):
         result, = struct.unpack(RebootDeviceResponse._PACK_FORMAT, payload)
         return RebootDeviceResponse(result)
 
-class WriteConfigurationParameters(General):
-    CMD_ID = 0x0b
-    FRAME_TYPE = Frame.Type.CMD
+class ConfigurationParameter:
 
-    def __init__(self):
-        super().__init__()
-        raise NotImplementedError
+    class Key(enum.Enum):
+        HIGH_SENSITIVITY_FUNCTION = 1
+        SWITCH_REPETITIVE_NON_REPETITIVE_SCANNING_PATTERN = 2
+        SLOT_ID_CONFIGURATION = 3
 
-class WriteConfigurationParametersResponse(WriteConfigurationParameters):
-    FRAME_TYPE = Frame.Type.AKN
-    __PACK_FORMAT = '<B?HB' #cmd_id, result, error_key, error_code
+    TYPE_DIC = {
+        Key.HIGH_SENSITIVITY_FUNCTION : bool,
+        Key.SWITCH_REPETITIVE_NON_REPETITIVE_SCANNING_PATTERN : bool,
+        Key.SLOT_ID_CONFIGURATION : int,
+    }
 
-    class ErrorCode(enum.Enum):
-        no_error                                = enum.auto()
-        the_key_is_not_supported                = enum.auto()
-        execution_failed                        = enum.auto()        
-        the_key_cannot_be_written               = enum.auto()                
-        wrong_value                             = enum.auto()
-        wrong_value_length                      = enum.auto()        
-        reading_parameter_length_limit          = enum.auto()                    
-        the_number_of_parameters_does_not_match = enum.auto()                            
+    def __init__(self, key:'Key|int', value):
+        self.key = key
+        self.value = value
 
-    def __init__(self, result:bool, error_key:int, error_code:'ErrorCode|int'):
-        super().__init__()
-        self.result = result
-        self.error_key = error_key
-        if type(error_code) is int:
-            error_code = self.ErrorCode(error_code)
-        elif type(error_code) is not self.ErrorCode:
-            raise TypeError(f'Bad type for error_code. Expect "ErrorCode" or "int". Got {type(error_code)}') 
-        self._error_code = error_code.value
+    def __repr__(self)->str:
+        return f'ConfigParam<{self.key}:{self.value}>'
 
     @property
-    def error_code(self)->ErrorCode:
-        return self.ErrorCode(self._error_code)
+    def key(self)->Key:
+        return self._key
+
+    @key.setter
+    def key(self, value:'Key|int'):
+        if type(value) is int:
+            value = self.Key(value)
+        elif type(value) is not self.Key:
+            raise TypeError
+        self._key = value
+        self.length = 5 # all config params in current version is 5 bytes length
+
+    @property
+    def value(self):
+        return self._value
+    
+    @value.setter
+    def value(self, value):
+        T = self.TYPE_DIC[self.key]
+        self._value = T(value)
+    
+    @property
+    def payload(self)->bytes:
+        return struct.pack('<HHB', self.key.value, self.length, self.value)
+
+    @staticmethod
+    def from_payload(payload:bytes)->'ConfigurationParameter':
+        length, = struct.unpack('<H', payload[2:4])
+        key, length, value = struct.unpack('<HHB', payload[:length])
+        return ConfigurationParameter(key, value)
+
+    @staticmethod
+    def from_payload_list(payload:bytes)->'list(ConfigurationParameter)':
+        result = []
+        shift = 0
+        while shift < len(payload):
+            parameter = ConfigurationParameter.from_payload(payload[shift:])
+            shift += parameter.length
+            result.append(parameter)
+        return result   
+
+
+class WriteConfigurationParameters(General):
+    CMD_TYPE = Frame.Type.CMD
+    CMD_ID = Frame.SetGeneral.WRITE_CONFIGURATION_PARAMETERS
+
+    def __init__(self, param_list:'list(ConfigurationParameter)|bytes'):
+        super().__init__()
+        self.param_list = param_list
+
+    @property
+    def param_list(self)->'list(ConfigurationParameter)':
+        return self._param_list
+
+    @param_list.setter
+    def param_list(self, value:'list(ConfigurationParameter)|bytes'):
+        if type(value) is bytes:
+            value = ConfigurationParameter.from_payload_list(value)
+        elif type(value) is not list or [parameter for parameter in value if type(parameter) is not ConfigurationParameter]:
+            raise TypeError
+        self._param_list = value
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self.result, self.error_key, self.error_code)
+        return super().payload(b''.join([param.payload for param in self.param_list]))
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, result, error_key, error_code = struct.unpack(WriteConfigurationParametersResponse.__PACK_FORMAT, payload)
-        WriteConfigurationParametersResponse._check_cmd_id(cmd_id)
-        return WriteConfigurationParametersResponse(result, error_key, error_code)
+        return WriteConfigurationParameters(payload)
+    
+
+class ErrorCode(enum.Enum):
+    NO_ERROR                                = 0
+    THE_KEY_IS_NOT_SUPPORTED                = 1
+    EXECUTION_FAILED                        = 2        
+    THE_KEY_CANNOT_BE_WRITTEN               = 3                
+    WRONG_VALUE                             = 4
+    WRONG_VALUE_LENGTH                      = 5        
+    READING_PARAMETER_LENGTH_LIMIT          = 6                    
+    THE_NUMBER_OF_PARAMETERS_DOES_NOT_MATCH = 7   
+
+class WriteConfigurationParametersResponse(General):
+    CMD_TYPE = Frame.Type.AKN
+    CMD_ID = Frame.SetGeneral.WRITE_CONFIGURATION_PARAMETERS
+
+    def __init__(self,  param_list:bytes):
+        super().__init__()
+        self.result = result
+        self.error_key = error_key
+        self.error_code = error_code
+        self.param_list = param_list
+
+    @property
+    def result(self)->bool:
+        return self._result
+
+    @result.setter
+    def result(self, value:bool):
+        if type(value) is not bool:
+            raise TypeError
+        self._result = value
+
+    @property
+    def error_code(self)->ErrorCode:
+        return self._error_code
+    
+    @error_code.setter
+    def error_code(self, value:'ErrorCode|int'):
+        if type(value) is int:
+            value = self.ErrorCode(value)
+        elif type(value) is not self.ErrorCode:
+            raise TypeError
+        self._error_code = value
+
+    @property
+    def param_list(self)->bytes:
+        return self._param_list
+
+    @param_list.setter
+    def param_list(self, value:bytes):
+        if type(value) is not bytes:
+            raise TypeError
+        if len(value) < 2:
+            raise ValueError
+        self._param_list = value
+
+    @property
+    def payload(self)->bytes:
+        payload_body = struct.pack(f'<?HB{len(self.param_list)}B', self.result, self.error_key, self.error_code, *self.param_list)
+        return super().payload(payload_body)
+
+    @staticmethod
+    def from_payload(payload:bytes):
+        result, error_key, error_code = struct.unpack('<?HB', payload[:4])
+        param_list = payload[5:]
+        return WriteConfigurationParametersResponse(result, error_key, error_code, param_list)
 
 
 class ReadConfigurationParameters(General):
-    CMD_ID = 0x0C
-    FRAME_TYPE = Frame.Type.CMD
-    # __PACK_FORMAT = '<B'
+    CMD_TYPE = Frame.Type.CMD
+    CMD_ID = Frame.SetGeneral.READ_CONFIGURATION_PARAMETERS
+
+    def __init__(self, keys_quantity:int, keys:bytes):
+        super().__init__()
+        self.keys_quantity = keys_quantity
+        self.keys = keys
+
+    @property
+    def keys_quantity(self)->int:
+        return self._keys_quantity
+
+    @keys_quantity.setter
+    def keys_quantity(self, value:int):
+        if type(value) is not int:
+            raise TypeError
+        self._keys_quantity = value
+
+    @property
+    def keys(self)->bytes:
+        return self._keys
     
+    @keys.setter
+    def keys(self, value:bytes):
+        if type(value) is not bytes:
+            raise TypeError
+        self._keys = value
+
+    @property
+    def payload(self)->bytes:
+        payload_body = struct.pack(f'<B{self.keys_quantity}B', self.keys_quantity, *self.keys)
+        return super().payload(payload_body)
+
+    @staticmethod
+    def from_payload(payload:bytes):
+        keys_quantity = payload[0]
+        keys = payload[1:]
+        return WriteConfigurationParameters(keys_quantity, keys)
+    
+
+class ReadConfigurationParametersResponse(General):
+    CMD_TYPE = Frame.Type.AKN
+    CMD_ID = Frame.SetGeneral.READ_CONFIGURATION_PARAMETERS
+
+    class ErrorCode(enum.Enum):
+        NO_ERROR                                = 0
+        THE_KEY_IS_NOT_SUPPORTED                = 1
+        EXECUTION_FAILED                        = 2        
+        THE_KEY_CANNOT_BE_WRITTEN               = 3                
+        WRONG_VALUE                             = 4
+        WRONG_VALUE_LENGTH                      = 5        
+        READING_PARAMETER_LENGTH_LIMIT          = 6                    
+        THE_NUMBER_OF_PARAMETERS_DOES_NOT_MATCH = 7                            
+
+    def __init__(self, result:bool, error_key:int, error_code:'ErrorCode|int', param_list:bytes):
+        super().__init__()
+        self.result = result
+        self.error_key = error_key
+        self.error_code = error_code
+        self.param_list = param_list
+
+    @property
+    def result(self)->bool:
+        return self._result
+
+    @result.setter
+    def result(self, value:bool):
+        if type(value) is not bool:
+            raise TypeError
+        self._result = value
+
+    @property
+    def error_code(self)->ErrorCode:
+        return self._error_code
+    
+    @error_code.setter
+    def error_code(self, value:'ErrorCode|int'):
+        if type(value) is int:
+            value = self.ErrorCode(value)
+        elif type(value) is not self.ErrorCode:
+            raise TypeError
+        self._error_code = value
+
+    @property
+    def param_list(self)->bytes:
+        return self._param_list
+
+    @param_list.setter
+    def param_list(self, value:bytes):
+        if type(value) is not bytes:
+            raise TypeError
+        if len(value) < 2:
+            raise ValueError
+        self._param_list = value
+
+    @property
+    def payload(self)->bytes:
+        payload_body = struct.pack(f'<?HB{len(self.param_list)}B', self.result, self.error_key, self.error_code, *self.param_list)
+        return super().payload(payload_body)
+
+    @staticmethod
+    def from_payload(payload:bytes):
+        result, error_key, error_code = struct.unpack('<?HB', payload[:4])
+        param_list = payload[5:]
+        return WriteConfigurationParametersResponse(result, error_key, error_code, param_list)
