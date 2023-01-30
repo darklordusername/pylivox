@@ -9,6 +9,8 @@ import ipaddress
 #project 
 from pylivox.control.frame import Frame
 
+DEVICE_MODE = 'LIDAR' #'HUB'
+
 class CMD(Frame):
     CMD_SET = None
     CMD_ID = None
@@ -22,53 +24,39 @@ class General(CMD):
 
 
 class WorkState():
-    class Lidar:
-        class Enum(enum.Enum):
-            Initializing    = 0
-            Normal          = 0x01
-            PowerSaving     = 0x02        
-            Standby         = 0x03    
-            Error           = 0x04
+    class Lidar(enum.Enum):
+        Initializing    = 0
+        Normal          = 0x01
+        PowerSaving     = 0x02        
+        Standby         = 0x03    
+        Error           = 0x04
         
-        def _work_state_pars(self, work_state:'Enum|int' ):
-            if type(work_state) is int:
-                work_state = self.Enum(work_state)
-            elif type(work_state) is not self.Enum:
-                raise TypeError(f'Bad type for work_state. Expect "Lidar.Enum" or "int". got {type(work_state)}')
-            self._work_state = work_state.value
+    class Hub(enum.Enum):
+        Initializing    = 0x00            
+        Normal          = 0x01
+        Error           = 0x04        
 
-        @property
-        def work_state(self)->Enum:
-            return self.Enum(self._work_state)
-        
-        
-    class Hub(Lidar):
-        class Enum(enum.Enum):
-            Initializing    = 0x00            
-            Normal          = 0x01
-            Error           = 0x04        
+# class FiatureMsg():
+#     class Lidar(enum.Enum):
+#         LiDAR 
+#         Feature Message:
+#         <br> Bit0: Rain/Fog Suppression Switch 
+#         <br>0x00: Turn Off 
+#         <br>0x01: Turn On 
+#         <br>Bit1 ~ Bit7: Reserved 
+#         <br>**Hub is Reserved** |
 
-class DeviceType():
-    class Enum(enum.Enum):
-        Hub     = 0     
-        Mid40   = 1 
-        Tele15  = 2
-        Horizon = 3
+class DeviceType(enum.Enum):
+    Hub     = 0     
+    Mid40   = 1 
+    Tele15  = 2
+    Horizon = 3
 
-    def _device_type_pars(self, device_type:'Enum|int'):
-        if type(device_type) is int:
-            device_type = DeviceType.Enum(device_type)
-        elif type(device_type) is not DeviceType.Enum:
-            raise TypeError(f'Bad type for dev_type. Expect "DeviceType" or "int". Got {type(device_type)}')
-        self._device_type = device_type
     
-    @property
-    def device_type(self)-> 'DeviceType.Enum':
-        return self.Enum(self._device_type)
 
 
 
-class BroadcastMsg(General, DeviceType):
+class BroadcastMsg(General):
     CMD_ID = 0
     CMD_TYPE = Frame.Type.MSG
 
@@ -246,54 +234,76 @@ class Heartbeat(General):
     def from_payload(payload:bytes):
         return Heartbeat()
 
-class LidarFeature:
-    def __init__(self, rain_fog_suppression:bool):
-        self.rain_fog_suppresion = rain_fog_suppression
 
-    @property
-    def pack(self)->bytes:
-        result = 0
-        result = result | 1 if self.rain_fog_suppresion else result & ~1
-        return result.to_bytes(1, 'little')
+class HeartbeatResponse(General):
+    CMD_TYPE = Frame.Type.AKN
+    CMD_ID = Frame.SetGeneral.HEARTBEAT
+    _PACK_FORMAT = '<?BBI' #response, work_state, feature, ack_msg
+    DEVICE_MODE = DEVICE_MODE
 
-    def _lidarFeature_pars(self, nval:'LidarFeature|int'):
-        if type(nval) is int:
-            nval = LidarFeature(nval)
-        elif type(nval) is not LidarFeature:
-            raise TypeError('Bad type for LidarFeature')
-        self._lidarFeature = nval
-
-class HeartbeatResponse(Heartbeat, WorkState.Lidar, LidarFeature):
-    FRAME_TYPE = Frame.Type.AKN
-    __PACK_FORMAT = '<B?BBI' #cmd_id, response, work_state, feature, ack_msg
-
-
-    def __init__(self, response:bool, work_state:'WorkState.Lidar|WorkState.Hub|int', feature:'LidarFeature|int', ack_msg:int):
-        #TODO description
+    def __init__(self, 
+                    result:bool, 
+                    work_state:'WorkState.Lidar|WorkState.Hub|int', 
+                    feature_msg:int, 
+                    ack_msg:int):
         super().__init__()
-        self.response = response
-        self._work_state_pars(work_state)
-        self._feature_parse
-
-        if type(feature) is int:
-            feature = self.Feature.Lidar(feature)
-        self._feature = feature.pack
-        self._ack_msg  = ack_msg.to_bytes(4, 'little')    
-
+        self.result = result
+        self.work_state = work_state
+        self.feature_msg = feature_msg
+        self.ack_msg = ack_msg
 
     @property
-    def ack_msg(self):
-        return int.from_bytes(self._ack_msg, 'little')
+    def work_state(self)->int:
+        return self._work_state.value
+
+    @work_state.setter
+    def work_state(self, value:'WorkState.Lidar|WorkState.Hub|int'):
+        """Depend on DEVICE_MODE 
+
+        Args:
+            value (WorkState.Lidar|WorkState.Hub|int): _description_
+        """
+        if type(value) is int:
+            if self.DEVICE_MODE == 'LIDAR':
+                value = WorkState.Lidar(value)
+            elif self.DEVICE_MODE == 'HUB':
+                value = WorkState.Hub(value)
+            else:
+                raise ValueError
+        elif type(value) is not WorkState.Lidar and type(value) is not WorkState.Hub:
+            raise TypeError
+        self._work_state = value
+
+    @property
+    def feature_msg(self)->int:
+        return self._feature_msg
+
+    @feature_msg.setter
+    def feature_msg(self, value:int):
+        if type(value) is not int:
+            raise TypeError
+        value.to_bytes(1, 'little')
+        self._feature_msg = value
+
+    @property
+    def ack_msg(self)->int:
+        return self._ack_msg
     
+    @ack_msg.setter
+    def ack_msg(self, value:int):
+        if type(value) is not int:
+            raise TypeError
+        value.to_bytes(4, 'little')
+        self._ack_msg = value
 
     @property
-    def payload(self):
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self._response, self._work_state, self._feature, self._ack_msg )
+    def payload(self)->bytes:
+        payload_body = struct.pack(self._PACK_FORMAT, self.result, self.work_state, self.feature_msg, self.ack_msg )
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload: bytes):
-        cmd_id, response, work_state, feature, ack_msg = struct.unpack(HeartbeatResponse.__PACK_FORMAT, payload)
-        HeartbeatResponse._check_cmd_id(cmd_id)
+        response, work_state, feature, ack_msg = struct.unpack(HeartbeatResponse._PACK_FORMAT, payload)
         return HeartbeatResponse(response, work_state, feature, ack_msg)
 
 class StartStopSampling(General):
