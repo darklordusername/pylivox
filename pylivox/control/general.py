@@ -433,22 +433,33 @@ class Disconnect(General):
     def from_payload(payload:bytes):
         return Disconnect()
 
-class DisconnectResponse(Disconnect):
-    FRAME_TYPE = Frame.Type.AKN
-    __PACK_FORMAT = '<B?' #cmd_id, response
+class DisconnectResponse(General):
+    CMD_TYPE = Frame.Type.AKN
+    CMD_ID = Frame.SetGeneral.DISCONNECT
+    _PACK_FORMAT = '<?' #result
 
-    def __init__(self, response:bool):
+    def __init__(self, result:bool):
         super().__init__()
-        self.response = response
+        self.result = result
+
+    @property
+    def result(self)->bool:
+        return self._result
+
+    @result.setter
+    def result(self, value:bool):
+        if type(value) is not bool:
+            raise TypeError
+        self._result = value
 
     @property
     def payload(self):
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self.response)
+        payload_body = struct.pack(self._PACK_FORMAT, self.result)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, response = struct.unpack(DisconnectResponse.__PACK_FORMAT, payload)
-        DisconnectResponse._check_cmd_id(cmd_id)
+        response, = struct.unpack(DisconnectResponse._PACK_FORMAT, payload)
         return DisconnectResponse(response)
 
 class PushAbnormalStatusInformation(General):
