@@ -721,22 +721,33 @@ class RebootDevice(General):
         timeout, = struct.unpack(RebootDevice._PACK_FORMAT, payload)
         return RebootDevice(timeout)
 
-class RebootDeviceResponse(RebootDevice):
-    FRAME_TYPE = Frame.Type.AKN
-    __PACK_FORMAT = '<B?' #cmd_id, result
+class RebootDeviceResponse(General):
+    CMD_TYPE = Frame.Type.AKN
+    CMD_ID = Frame.SetGeneral.REBOOT_DEVICE
+    _PACK_FORMAT = '<?' #result
 
     def __init__(self, result:bool):
         super().__init__()
         self.result = result
 
     @property
+    def result(self)->bool:
+        return self._result
+
+    @result.setter
+    def result(self, value:bool):
+        if type(value) is not bool:
+            raise TypeError
+        self._result = value
+
+    @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self.result)
+        payload_body = struct.pack(self._PACK_FORMAT, self.result)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, result = struct.unpack(RebootDeviceResponse.__PACK_FORMAT, payload)
-        RebootDeviceResponse._check_cmd_id(cmd_id)
+        result, = struct.unpack(RebootDeviceResponse._PACK_FORMAT, payload)
         return RebootDeviceResponse(result)
 
 class WriteConfigurationParameters(General):
