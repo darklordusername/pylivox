@@ -187,7 +187,7 @@ class HandshakeResponse(General):
 
     @staticmethod
     def from_payload(payload: bytes):
-        code = struct.unpack(HandshakeResponse._PACK_FORMAT, payload)
+        code, = struct.unpack(HandshakeResponse._PACK_FORMAT, payload)
         return HandshakeResponse(code)
     
 class QueryDeviceInformation(General):
@@ -332,29 +332,36 @@ class StartStopSampling(General):
 
     @staticmethod
     def from_payload(payload:bytes):
-        is_start = struct.unpack(StartStopSampling._PACK_FORMAT, payload)
-        return StartStopSampling(bool(is_start))
+        is_start,  = struct.unpack(StartStopSampling._PACK_FORMAT, payload)
+        return StartStopSampling(is_start)
 
-class StartStopSamplingResponse(StartStopSampling):
-    FRAME_TYPE = Frame.Type.AKN
-    __PACK_FORMAT = '<BB' #cmd_id, response
+class StartStopSamplingResponse(General):
+    CMD_TYPE = Frame.Type.AKN
+    CMD_ID = Frame.SetGeneral.START_STOP_SAMPLING
+    _PACK_FORMAT = '<?' #result
 
-    def __init__(self, response:int):
+    def __init__(self, result:int):
         super().__init__()
-        self._response = response.to_bytes(1, 'little')
+        self.result = result
 
     @property
-    def response(self)->int:
-        return int.from_bytes(self._response, 'little')
+    def result(self)->bool:
+        return self._result
+    
+    @result.setter
+    def result(self, value:bool):
+        if type(value) is not bool:
+            raise TypeError
+        self._result = value
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self._response)
+        payload_body = struct.pack(self._PACK_FORMAT, self.result)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload: bytes):
-        cmd_id, response = struct.unpack(StartStopSamplingResponse.__PACK_FORMAT, payload)
-        StartStopSamplingResponse._check_cmd_id(cmd_id)
+        response, = struct.unpack(StartStopSamplingResponse._PACK_FORMAT, payload)
         return StartStopSamplingResponse(response)
 
 class ChangeCoordinateSystem(General):
