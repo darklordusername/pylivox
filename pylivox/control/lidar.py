@@ -182,8 +182,9 @@ class TurnOnOffRainFogSuppression(Lidar):
         is_enable = struct.unpack(TurnOnOffRainFogSuppression._PACK_FORMAT, payload)
         return TurnOnOffRainFogSuppression(is_enable)
 
-class TurnOnOffRainFogSuppressionResponse( TurnOnOffRainFogSuppression):
-    pass
+class TurnOnOffRainFogSuppressionResponse(Lidar, IsErrorResponseOnly):
+    CMD_TYPE = Frame.Type.AKN
+    CMD_ID = Frame.SetLidar.TURN_ON_OFF_RAIN_FOG_SUPPRESSION
 
 class SetTurnOnOffFan(Lidar):
     CMD_ID = 0x04 
