@@ -350,8 +350,8 @@ class SetImuDataPushFrequency(Lidar):
         frequency, = struct.unpack(SetImuDataPushFrequency._PACK_FORMAT, payload)
         return SetImuDataPushFrequency(frequency)
 
-class SetImuDataPushFrequencyResponse( SetImuDataPushFrequency):
-    pass
+class SetImuDataPushFrequencyResponse( Lidar, IsErrorResponseOnly):
+    CMD_ID = Frame.SetLidar.SET_IMU_DATA_PUSH_FREQUENCY
 
 class GetImuDataPushFrequency(Lidar):
     CMD_ID = 0x09 
