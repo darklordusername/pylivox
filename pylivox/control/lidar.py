@@ -24,10 +24,10 @@ class ImuDataPushFrequency(enum.Enum):
     Hz_200 = 1
 
 class ReturnMode(enum.Enum):
-    singleReturnFirst = 0x00
-    singleReturnStrongest = 0x01
-    dualReturn = 0x02
-    tripleReturn = 0x03
+    SINGLE_RETURN_FIRST= 0x00
+    SINGLE_RETURN_STRONGEST= 0x01
+    DUAL_RETURN= 0x02
+    TRIPLE_RETURN= 0x03
 
 
 
@@ -240,32 +240,35 @@ class GetTurnOnOffFanStateResponse( Lidar, IsErrorResponse):
         return GetTurnOnOffFanStateResponse(is_error, state)
 
 class SetLiDarReturnMode(Lidar):
-    CMD_ID = 0x06 
-    FRAME_TYPE = Frame.Type.CMD
-    __PACK_FORMAT = ''
+    CMD_TYPE = Frame.Type.CMD
+    CMD_ID = Frame.SetLidar.SET_LIDAR_RETURN_MODE 
+    _PACK_FORMAT = '<B' # return_mode
 
-
-    def __init__(self, mode:'ReturnMode|int'):
+    def __init__(self, return_mode:'ReturnMode|int'):
         super().__init__()
-        if type(mode) is int:
-            mode = self.ReturnMode(mode)
-        elif type(mode) is not self.ReturnMode:
-            raise TypeError(f'Bad Type for mode. Expected "ReturnMode" or "int". Got {type(mode)}')
-        self._mode = mode.value
+        self.return_mode = return_mode
 
     @property
-    def mode(self)->ReturnMode:
-        return self.ReturnMode(self._mode)
+    def return_mode(self)->ReturnMode:
+        return self._return_mode
+
+    @return_mode.setter
+    def return_mode(self, value:'ReturnMode|int'):
+        if type(value) is int:
+            value = ReturnMode(value)
+        elif type(value) is not ReturnMode:
+            raise TypeError
+        self._return_mode = value
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self._mode)
+        payload_body = struct.pack(self._PACK_FORMAT, self.return_mode.value)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, mode = struct.unpack(SetLiDarReturnMode.__PACK_FORMAT, payload)
-        SetLiDarReturnMode._check_cmd_id(cmd_id)
-        return SetLiDarReturnMode(mode)
+        return_mode, = struct.unpack(SetLiDarReturnMode._PACK_FORMAT, payload)
+        return SetLiDarReturnMode(return_mode)
 
 class SetLiDarReturnModeReponse( SetLiDarReturnMode):
     pass
