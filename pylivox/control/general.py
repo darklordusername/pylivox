@@ -440,26 +440,32 @@ class DisconnectResponse(General, IsErrorResponse):
         return DisconnectResponse(is_error)
 
 class PushAbnormalStatusInformation(General):
-    CMD_ID = 0x07
-    FRAME_TYPE = Frame.Type.MSG
-    __PACK_FORMAT = '<BI' #cmd_id, status_code
+    CMD_TYPE = Frame.Type.MSG
+    CMD_ID = Frame.SetGeneral.PUSH_ABNORMAL_STATUS_INFORMATION
+    _PACK_FORMAT = '<I' #status_code
 
     def __init__(self, status_code:int):
         super().__init__()
-        self._status_code = status_code.to_bytes(4, 'little')
+        self.status_code = status_code
 
     @property
-    def status_code(self):
-        return int.from_bytes(self._status_code, 'little')
+    def status_code(self)->int:
+        return self._status_code
+
+    @status_code.setter
+    def status_code(self, value:int):
+        if type(value) is not int:
+            raise TypeError
+        self._status_code = value
 
     @property
-    def payload(self):
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self._status_code)
+    def payload(self)->bytes:
+        payload_body = struct.pack(self._PACK_FORMAT, self.status_code)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, status_code = struct.unpack(PushAbnormalStatusInformation.__PACK_FORMAT, payload)
-        PushAbnormalStatusInformation._check_cmd_id(cmd_id)
+        status_code, = struct.unpack(PushAbnormalStatusInformation._PACK_FORMAT, payload)
         return PushAbnormalStatusInformation(status_code)
 
 class ConfigureStaticDynamicIp(General):
