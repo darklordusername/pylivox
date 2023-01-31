@@ -25,13 +25,13 @@ class General(CMD):
 class IsErrorResponse:
     @property
     def is_error(self)->bool:
-        return self._result
+        return self._is_error
 
     @is_error.setter
     def is_error(self, value:bool):
         if type(value) is not bool:
             raise TypeError
-        self._result = value
+        self._is_error = value
 
 
 class WorkState():
@@ -62,10 +62,6 @@ class DeviceType(enum.Enum):
     Mid40   = 1 
     Tele15  = 2
     Horizon = 3
-
-    
-
-
 
 class BroadcastMsg(General):
     CMD_ID = 0
@@ -182,18 +178,18 @@ class Handshake(General):
         ip_int, point_port, cmd_port, imu_port = struct.unpack(Handshake._PACK_FORMAT, payload)
         return Handshake(ipaddress.IPv4Address(ip_int), point_port, cmd_port, imu_port)
 
-class HandshakeResponse(General):
+class HandshakeResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.HANDSHAKE
     _PACK_FORMAT = '<?' ##response code
 
-    def __init__(self, result:bool):
+    def __init__(self, is_error:bool):
         super().__init__()
-        self.response = result
+        self.is_error = is_error
 
     @property
     def payload(self):
-        payload_body = struct.pack(self._PACK_FORMAT, self.response)
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_error)
         return super().payload(payload_body)
 
     @staticmethod
@@ -213,25 +209,25 @@ class QueryDeviceInformation(General):
     def from_payload(payload:bytes):
         return QueryDeviceInformation()
 
-class QueryDeviceInformationResponse(General):
+class QueryDeviceInformationResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.QUERY_DEVICE_INFORMATION
-    _PACK_FORMAT = '<?I' #result, firmware version
+    _PACK_FORMAT = '<?I' #is_error, firmware version
 
-    def __init__(self, result:bool, firmware_version:int):
+    def __init__(self, is_error:bool, firmware_version:int):
         super().__init__()
-        self.result = bool(result)
+        self.is_error = is_error
         self.firmware_version = firmware_version
 
     @property
     def payload(self):
-        payload_body = struct.pack(self._PACK_FORMAT, self.result, self.firmware_version)
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_error, self.firmware_version)
         return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        result, firmware_version = struct.unpack(QueryDeviceInformationResponse._PACK_FORMAT, payload)
-        return QueryDeviceInformationResponse(result, firmware_version)
+        is_error, firmware_version = struct.unpack(QueryDeviceInformationResponse._PACK_FORMAT, payload)
+        return QueryDeviceInformationResponse(is_error, firmware_version)
 
 class Heartbeat(General):
     CMD_TYPE = Frame.Type.CMD
@@ -245,19 +241,19 @@ class Heartbeat(General):
     def from_payload(payload:bytes):
         return Heartbeat()
 
-class HeartbeatResponse(General):
+class HeartbeatResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.HEARTBEAT
-    _PACK_FORMAT = '<?BBI' #response, work_state, feature, ack_msg
+    _PACK_FORMAT = '<?BBI' #is_error, work_state, feature, ack_msg
     DEVICE_MODE = DEVICE_MODE
 
     def __init__(self, 
-                    result:bool, 
+                    is_error:bool, 
                     work_state:'WorkState.Lidar|WorkState.Hub|int', 
                     feature_msg:int, 
                     ack_msg:int):
         super().__init__()
-        self.result = result
+        self.is_error = is_error
         self.work_state = work_state
         self.feature_msg = feature_msg
         self.ack_msg = ack_msg
@@ -308,13 +304,13 @@ class HeartbeatResponse(General):
 
     @property
     def payload(self)->bytes:
-        payload_body = struct.pack(self._PACK_FORMAT, self.result, self.work_state, self.feature_msg, self.ack_msg )
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_error, self.work_state, self.feature_msg, self.ack_msg )
         return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload: bytes):
-        response, work_state, feature, ack_msg = struct.unpack(HeartbeatResponse._PACK_FORMAT, payload)
-        return HeartbeatResponse(response, work_state, feature, ack_msg)
+        is_error, work_state, feature, ack_msg = struct.unpack(HeartbeatResponse._PACK_FORMAT, payload)
+        return HeartbeatResponse(is_error, work_state, feature, ack_msg)
 
 class StartStopSampling(General):
     CMD_TYPE = Frame.Type.CMD
@@ -345,28 +341,18 @@ class StartStopSampling(General):
         is_start,  = struct.unpack(StartStopSampling._PACK_FORMAT, payload)
         return StartStopSampling(is_start)
 
-class StartStopSamplingResponse(General):
+class StartStopSamplingResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.START_STOP_SAMPLING
-    _PACK_FORMAT = '<?' #result
+    _PACK_FORMAT = '<?' #is_error
 
-    def __init__(self, result:int):
+    def __init__(self, is_error:int):
         super().__init__()
-        self.result = result
-
-    @property
-    def result(self)->bool:
-        return self._result
-    
-    @result.setter
-    def result(self, value:bool):
-        if type(value) is not bool:
-            raise TypeError
-        self._result = value
+        self.is_error = is_error
 
     @property
     def payload(self)->bytes:
-        payload_body = struct.pack(self._PACK_FORMAT, self.result)
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_error)
         return super().payload(payload_body)
 
     @staticmethod
@@ -403,34 +389,24 @@ class ChangeCoordinateSystem(General):
         is_spherical, = struct.unpack(ChangeCoordinateSystem._PACK_FORMAT, payload)
         return ChangeCoordinateSystem(is_spherical)
 
-class ChangeCoordinateSystemResponse(General):
+class ChangeCoordinateSystemResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.CHANGE_COORDINATE_SYSTEM
-    _PACK_FORMAT = '<?' #result
+    _PACK_FORMAT = '<?' #is_error
 
-    def __init__(self, result:bool):
+    def __init__(self, is_error:bool):
         super().__init__()
-        self.result = result
-    
-    @property
-    def result(self)->bool:
-        return self._result
-
-    @result.setter
-    def result(self, value:bool):
-        if type(value) is not bool:
-            raise TypeError
-        self._result = value
+        self.is_error = is_error
 
     @property
     def payload(self):
-        payload_body = struct.pack(self._PACK_FORMAT, self.result)
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_error)
         return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        result, = struct.unpack(ChangeCoordinateSystemResponse._PACK_FORMAT, payload)
-        return ChangeCoordinateSystemResponse(result)
+        is_error, = struct.unpack(ChangeCoordinateSystemResponse._PACK_FORMAT, payload)
+        return ChangeCoordinateSystemResponse(is_error)
 
 class Disconnect(General):
     CMD_TYPE = Frame.Type.CMD
@@ -444,34 +420,24 @@ class Disconnect(General):
     def from_payload(payload:bytes):
         return Disconnect()
 
-class DisconnectResponse(General):
+class DisconnectResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.DISCONNECT
-    _PACK_FORMAT = '<?' #result
+    _PACK_FORMAT = '<?' #is_error
 
-    def __init__(self, result:bool):
+    def __init__(self, is_error:bool):
         super().__init__()
-        self.result = result
-
-    @property
-    def result(self)->bool:
-        return self._result
-
-    @result.setter
-    def result(self, value:bool):
-        if type(value) is not bool:
-            raise TypeError
-        self._result = value
+        self.is_error = is_error
 
     @property
     def payload(self):
-        payload_body = struct.pack(self._PACK_FORMAT, self.result)
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_error)
         return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        response, = struct.unpack(DisconnectResponse._PACK_FORMAT, payload)
-        return DisconnectResponse(response)
+        is_error, = struct.unpack(DisconnectResponse._PACK_FORMAT, payload)
+        return DisconnectResponse(is_error)
 
 class PushAbnormalStatusInformation(General):
     CMD_ID = 0x07
@@ -578,34 +544,24 @@ class ConfigureStaticDynamicIp(General):
         is_static, ip, mask, gw = struct.unpack(ConfigureStaticDynamicIp._PACK_FORM, payload)
         return ConfigureStaticDynamicIp(is_static, ip, mask, gw)
 
-class ConfigureStaticDynamicIpResponse(General):
+class ConfigureStaticDynamicIpResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.CONFIGURE_STATIC_DYNAMIC_IP
-    _PACK_FORMAT = '<?' # result
+    _PACK_FORMAT = '<?' # is_error
 
-    def __init__(self, result:bool):
+    def __init__(self, is_error:bool):
         super().__init__()
-        self.result = result
-
-    @property 
-    def result(self)->bool:
-        return self._result
-
-    @result.setter
-    def result(self, value:bool):
-        if type(value) is not bool:
-            raise TypeError
-        self._result = value
+        self.is_error = is_error
 
     @property
     def payload(self)->bytes:
-        payload_body = struct.pack(self._PACK_FORMAT, self.result)
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_error)
         return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        result, = struct.unpack(ConfigureStaticDynamicIpResponse._PACK_FORMAT, payload)
-        return ConfigureStaticDynamicIpResponse(result)
+        is_error, = struct.unpack(ConfigureStaticDynamicIpResponse._PACK_FORMAT, payload)
+        return ConfigureStaticDynamicIpResponse(is_error)
 
 class GetDeviceIpInformation(General):
     CMD_TYPE = Frame.Type.CMD
@@ -619,33 +575,23 @@ class GetDeviceIpInformation(General):
     def from_payload(payload):
         return GetDeviceIpInformation()
 
-class GetDeviceIpInformationResponse(General):
+class GetDeviceIpInformationResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.GET_DEVICE_IP_INFORMATION
-    _PACK_FORMAT = '<??III' #result, is_static, ip, mask, gw
+    _PACK_FORMAT = '<??III' #is_error, is_static, ip, mask, gw
 
     def __init__(self, 
-                    result:bool, 
+                    is_error:bool, 
                     is_static:bool, 
                     ip:'ipaddress.IPv4Address|str|int', 
                     mask:'ipaddress.IPv4Address|str|int', 
                     gw:'ipaddress.IPv4Address|str|int' ):
         super().__init__()
-        self.result = result
+        self.is_error = is_error
         self.is_static = is_static
         self.ip = ip
         self.mask = mask
         self.gw = gw
-
-    @property
-    def result(self)->bool:
-        return self._result
-    
-    @result.setter
-    def result(self, value:bool):
-        if type(value) is not bool:
-            raise TypeError
-        self._result = value
 
     @property
     def is_static(self)->bool:
@@ -695,13 +641,13 @@ class GetDeviceIpInformationResponse(General):
 
     @property
     def payload(self)->bytes:
-        payload_body = struct.pack(self._PACK_FORMAT, self.result, self.is_static, int(self.ip), int(self.mask), int(self.gw))
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_error, self.is_static, int(self.ip), int(self.mask), int(self.gw))
         return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload):
-        result, is_static, ip, mask, gw = struct.unpack(GetDeviceIpInformationResponse._PACK_FORMAT, payload)
-        return GetDeviceIpInformationResponse(result, is_static, ip, mask, gw)
+        is_error, is_static, ip, mask, gw = struct.unpack(GetDeviceIpInformationResponse._PACK_FORMAT, payload)
+        return GetDeviceIpInformationResponse(is_error, is_static, ip, mask, gw)
 
 class RebootDevice(General):
     CMD_TYPE = Frame.Type.CMD
@@ -732,34 +678,24 @@ class RebootDevice(General):
         timeout, = struct.unpack(RebootDevice._PACK_FORMAT, payload)
         return RebootDevice(timeout)
 
-class RebootDeviceResponse(General):
+class RebootDeviceResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.REBOOT_DEVICE
-    _PACK_FORMAT = '<?' #result
+    _PACK_FORMAT = '<?' #is_error
 
-    def __init__(self, result:bool):
+    def __init__(self, is_error:bool):
         super().__init__()
-        self.result = result
-
-    @property
-    def result(self)->bool:
-        return self._result
-
-    @result.setter
-    def result(self, value:bool):
-        if type(value) is not bool:
-            raise TypeError
-        self._result = value
+        self.is_error = is_error
 
     @property
     def payload(self)->bytes:
-        payload_body = struct.pack(self._PACK_FORMAT, self.result)
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_error)
         return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        result, = struct.unpack(RebootDeviceResponse._PACK_FORMAT, payload)
-        return RebootDeviceResponse(result)
+        is_error, = struct.unpack(RebootDeviceResponse._PACK_FORMAT, payload)
+        return RebootDeviceResponse(is_error)
 
 class ConfigurationParameter:
 
@@ -832,7 +768,6 @@ class ConfigurationParameter:
             result.append(parameter)
         return result   
 
-
 class WriteConfigurationParameters(General):
     CMD_TYPE = Frame.Type.CMD
     CMD_ID = Frame.SetGeneral.WRITE_CONFIGURATION_PARAMETERS
@@ -860,14 +795,11 @@ class WriteConfigurationParameters(General):
     @staticmethod
     def from_payload(payload:bytes):
         return WriteConfigurationParameters(payload)
-    
-
-
 
 class WriteConfigurationParametersResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.WRITE_CONFIGURATION_PARAMETERS
-    _PACK_FORMAT = '<?HB' #result, error_key, error_code
+    _PACK_FORMAT = '<?HB' #is_error, error_key, error_code
 
     def __init__(self,  
                     is_error:bool, 
@@ -909,9 +841,8 @@ class WriteConfigurationParametersResponse(General, IsErrorResponse):
 
     @staticmethod
     def from_payload(payload:bytes):
-        result, error_key, error_code = struct.unpack(WriteConfigurationParametersResponse._PACK_FORMAT, payload)
-        return WriteConfigurationParametersResponse(result, error_key, error_code)
-
+        is_error, error_key, error_code = struct.unpack(WriteConfigurationParametersResponse._PACK_FORMAT, payload)
+        return WriteConfigurationParametersResponse(is_error, error_key, error_code)
 
 class ReadConfigurationParameters(General):
     CMD_TYPE = Frame.Type.CMD
@@ -953,7 +884,6 @@ class ReadConfigurationParameters(General):
         keys_bytes = [payload[2*i+1:2*i+3] for i in range(keys_quantity)]
         keys = [ ConfigurationParameter.Key(int.from_bytes(key,'little')) for key in keys_bytes]
         return ReadConfigurationParameters(keys_quantity, keys)
-    
 
 class ReadConfigurationParametersResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
