@@ -138,12 +138,14 @@ class ReadLidarExtrinsicParameters(Lidar):
     def from_payload(payload:bytes):
         return ReadLidarExtrinsicParameters()
 
-class ReadLidarExtrinsicParametersResponse(ReadLidarExtrinsicParameters):
-    FRAME_TYPE = Frame.Type.AKN
-    __PACK_FORMAT = '<B?IIIIII' #cmd_id, result, roll, pitch, yaw, x, y, z
+class ReadLidarExtrinsicParametersResponse(Lidar, IsErrorResponse):
+    CMD_TYPE = Frame.Type.AKN
+    CMD_ID = Frame.SetLidar.READ_LIDAR_EXTRINSIC_PARAMETERS
+    _PACK_FORMAT = '<?fffIII' #is_error, roll, pitch, yaw, x, y, z
 
-    def __init__(self, result:bool, roll:int, pitch:int, yaw:int, x:int, y:int, z:int):
-        self.result = result
+    def __init__(self, is_error:bool, roll:float, pitch:float, yaw:float, x:int, y:int, z:int):
+        super().__init__()
+        self.is_error = is_error
         self.roll = roll
         self.pitch = pitch
         self.yaw = yaw
@@ -153,13 +155,13 @@ class ReadLidarExtrinsicParametersResponse(ReadLidarExtrinsicParameters):
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self.result, self.roll, self.pitch, self.yaw, self.x, self.y, self.z)
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_error, self.roll, self.pitch, self.yaw, self.x, self.y, self.z)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, result, roll, pitch, yaw, x, y, z = struct.unpack(ReadLidarExtrinsicParametersResponse.__PACK_FORMAT, payload)
-        ReadLidarExtrinsicParametersResponse._check_cmd_id(cmd_id)
-        return ReadLidarExtrinsicParameters(result, roll, pitch, yaw, x, y, z)
+        is_error, roll, pitch, yaw, x, y, z = struct.unpack(ReadLidarExtrinsicParametersResponse._PACK_FORMAT, payload)
+        return ReadLidarExtrinsicParametersResponse(is_error, roll, pitch, yaw, x, y, z)
 
 class TurnOnOffRainFogSuppression(Lidar):
     CMD_ID = 0x03 
