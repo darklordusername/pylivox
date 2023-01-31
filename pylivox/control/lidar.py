@@ -354,21 +354,15 @@ class SetImuDataPushFrequencyResponse( Lidar, IsErrorResponseOnly):
     CMD_ID = Frame.SetLidar.SET_IMU_DATA_PUSH_FREQUENCY
 
 class GetImuDataPushFrequency(Lidar):
-    CMD_ID = 0x09 
-    FRAME_TYPE = Frame.Type.CMD
-    __PACK_FORMAT = 'B' #cmd_id
-
-    def __init__(self):
-        super().__init__()
+    CMD_TYPE = Frame.Type.CMD
+    CMD_ID = Frame.SetLidar.GET_IMU_DATA_PUSH_FREQUENCY 
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT,)
+        return super().payload(b'')
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id = struct.unpack(GetImuDataPushFrequency.__PACK_FORMAT, payload)
-        GetImuDataPushFrequency._check_cmd_id(cmd_id)
         return GetImuDataPushFrequency()
 
 class GetImuDataPushFrequencyResponse( GetImuDataPushFrequency):
