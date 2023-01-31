@@ -24,8 +24,8 @@ def cmd_payload(payload:str):
 @pytest.mark.parametrize(
     'T                                     , kwargs                                                                                 , frame',
     [                 
-    # (g.BroadcastMsg                        , {'broadcast' : g.BroadcastMsg.Broadcast(serial=0x11223344, ip_range=0)                 ,
-    #                                             'dev_type'  : g.DeviceType.Enum.Mid40}                                              , cmd_payload('aa 01 2200 02 0000 597e 00 00 34120000000000000000000000003300010000 b3784846')),
+    (g.BroadcastMsg                        , {'broadcast' : g.Broadcast(serial=a2b_hex('1122334455667788990011223344'), ip_range=0) ,                                                                                           #serial,                     ip_range, reserved, device_type, reserved           crc
+                                            'dev_type'  : g.DeviceType.Mid40}                                                     , cmd_payload('aa     01                2200    02        0000  0000      00       00         1122334455667788990011223344 00        00        01           0000               00000000')),
     (g.Handshake                           , {'ip'        : '192.168.1.1',                 
                                             'point_port': 0x1122,                 
                                             'cmd_port'  : 0x3344,                                                                               #start, protocol version, length, cmd type, seq , head crc, cmd set, cmd id,    user ip, data port, cmd pro, imu port,             crc

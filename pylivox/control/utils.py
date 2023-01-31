@@ -9,7 +9,7 @@ import pylivox.control.lidar as lidar
 
 TypeDict = {
     #GENERAL CMD
-    (Frame.Set.GENERAL.value, Frame.Type.CMD.value, Frame.SetGeneral.BROADCAST_MESSAGE                .value) : general.BroadcastMsg,
+    (Frame.Set.GENERAL.value, Frame.Type.MSG.value, Frame.SetGeneral.BROADCAST_MESSAGE                .value) : general.BroadcastMsg,
     (Frame.Set.GENERAL.value, Frame.Type.CMD.value, Frame.SetGeneral.HANDSHAKE                        .value) : general.Handshake,
     (Frame.Set.GENERAL.value, Frame.Type.CMD.value, Frame.SetGeneral.QUERY_DEVICE_INFORMATION         .value) : general.QueryDeviceInformation,
     (Frame.Set.GENERAL.value, Frame.Type.CMD.value, Frame.SetGeneral.HEARTBEAT                        .value) : general.Heartbeat,

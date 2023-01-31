@@ -63,63 +63,89 @@ class DeviceType(enum.Enum):
     Tele15  = 2
     Horizon = 3
 
+
+class Broadcast():
+    _PACK_FORMAT = '<14BBx' #14 byte serial, ip_range, reserved
+    _PACK_LENGTH = struct.calcsize(_PACK_FORMAT)
+
+    def __init__(self, serial:bytes, ip_range:int):
+        self.serial = serial
+        self.ip_range = ip_range
+
+    @property
+    def serial(self)->bytes:
+        return self._serial
+
+    @serial.setter
+    def serial(self, value:bytes):
+        if type(value) is not bytes:
+            raise TypeError
+        self._serial = value
+
+    @property
+    def ip_range(self)->int:
+        return self._ip_range
+
+    @ip_range.setter
+    def ip_range(self, value:int):
+        if type(value) is not int:
+            raise TypeError
+        value.to_bytes(1, 'little')
+        self._ip_range = value
+
+    @property
+    def payload(self)->bytes:
+        return struct.pack(self._PACK_FORMAT, *self._serial, self.ip_range)
+
+    @staticmethod
+    def from_payload(payload:bytes)->'Broadcast':
+        *serial, ip_range = struct.unpack(Broadcast._PACK_FORMAT, payload)
+        serial = bytes(serial)
+        return Broadcast(serial, ip_range)
+
+
 class BroadcastMsg(General):
-    CMD_ID = 0
     CMD_TYPE = Frame.Type.MSG
+    CMD_ID = Frame.SetGeneral.BROADCAST_MESSAGE
+    _PACK_FORMAT = f'<B2x' #{broadcast}, dev_type, reserved
 
-    class Broadcast():
-        __PACK_FORMAT = '<14BBx' #serial, ip_range, reserved
-        PACK_SIZE = struct.calcsize(__PACK_FORMAT)
-
-        def __init__(self, serial:int, ip_range:int):
-            self._serial = serial.to_bytes(14, 'little')
-            self.ip_range = ip_range
-
-        @property
-        def serial(self)->int:
-            return int.from_bytes(self._serial, 'little')
-
-        @property
-        def payload(self)->bytes:
-            return struct.pack(self.__PACK_FORMAT, *self._serial, self.ip_range)
-
-        @staticmethod
-        def from_payload(payload:bytes)->'BroadcastMsg.Broadcast':
-            serial, ip_range = struct.unpack(BroadcastMsg.Broadcast.__PACK_FORMAT, payload)
-            return BroadcastMsg.Broadcast(serial, ip_range)
-
-    __PACK_FORMAT = f'<B{Broadcast.PACK_SIZE}sB2x' #cmd_id, {broadcast}, dev_type, reserved
-
-    def __init__(self, broadcast:'Broadcast|bytes', dev_type:'DeviceType.Enum|int' ): 
-        #TODO description
+    def __init__(self, broadcast:Broadcast, dev_type:'DeviceType|int' ): 
         super().__init__()
-        if type(broadcast) is bytes:
-            broadcast = BroadcastMsg.Broadcast.from_payload(broadcast)
-        elif type(broadcast) is not self.Broadcast:
-            raise TypeError(f'Bad type for broadcast. Expect "Broadcast" or "bytes". Got {type(broadcast)}')
-        self._broadcast = broadcast.payload
-        if type(dev_type) is int:
-            dev_type = DeviceType.Enum(dev_type)
-        elif type(dev_type) is not DeviceType.Enum:
-            raise TypeError(f'Bad type for dev_type. Expect "DeviceType" or "int". got {type(dev_type)}')
-        self._dev_type = dev_type.value
+        self.broadcast = broadcast
+        self.dev_type = dev_type
+
+    @property
+    def broadcast(self)->Broadcast:
+        return self._broadcast
+
+    @broadcast.setter
+    def broadcast(self, value:Broadcast):
+        if type(value) is not Broadcast:
+            raise TypeError
+        self._broadcast = value        
 
     @property
     def dev_type(self)->DeviceType:
-        return DeviceType(self._dev_type)
+        return self._dev_type
 
-    @property
-    def broadcast(self)->'BroadcastMsg.Broadcast':
-        return BroadcastMsg.Broadcast.from_payload(self._broadcast)
+    @dev_type.setter
+    def dev_type(self, value:'DeviceType|int'):
+        if type(value) is int:
+            value = DeviceType(value)
+        elif type(value) is not DeviceType:
+            raise TypeError
+        self._dev_type = value
         
     @property
     def payload(self):
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self._broadcast, self._dev_type)
+        payload_body = self.broadcast.payload + struct.pack(self._PACK_FORMAT, self.dev_type.value)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes)->'BroadcastMsg':
-        cmd_id, broadcast, dev_type = struct.unpack(BroadcastMsg.__PACK_FORMAT, payload)
-        BroadcastMsg._check_cmd_id(cmd_id)
+        broadcast_bytes = payload[:Broadcast._PACK_LENGTH]
+        broadcast = Broadcast.from_payload(broadcast_bytes)
+        dev_type, = struct.unpack(BroadcastMsg._PACK_FORMAT, payload[Broadcast._PACK_LENGTH:])
         return BroadcastMsg(broadcast, dev_type)
 
 class Handshake(General):
