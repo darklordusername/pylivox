@@ -123,7 +123,6 @@ class WriteLiDarExtrinsicParameters(Lidar):
         return WriteLiDarExtrinsicParameters(roll, pitch, yaw, x, y, z)
 
 class WriteLiDarExtrinsicParametersResponse(Lidar, IsErrorResponseOnly):
-    CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetLidar.WRITE_LIDAR_EXTRINSIC_PARAMETERS
 
 class ReadLidarExtrinsicParameters(Lidar):
@@ -183,7 +182,6 @@ class TurnOnOffRainFogSuppression(Lidar):
         return TurnOnOffRainFogSuppression(is_enable)
 
 class TurnOnOffRainFogSuppressionResponse(Lidar, IsErrorResponseOnly):
-    CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetLidar.TURN_ON_OFF_RAIN_FOG_SUPPRESSION
 
 class SetTurnOnOffFan(Lidar):
@@ -205,8 +203,9 @@ class SetTurnOnOffFan(Lidar):
         is_enable, = struct.unpack(SetTurnOnOffFan._PACK_FORMAT, payload)
         return SetTurnOnOffFan(is_enable)
 
-class SetTurnOnOffFanResponse( SetTurnOnOffFan):
-    pass    
+class SetTurnOnOffFanResponse( Lidar, IsErrorResponseOnly):
+    CMD_ID = Frame.SetLidar.SET_TURN_ON_OFF_FAN    
+
 
 class GetTurnOnOffFanState(Lidar):
     CMD_ID = 0x05 

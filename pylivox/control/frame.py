@@ -170,6 +170,7 @@ class IsErrorResponse(Cmd):
 
 
 class IsErrorResponseOnly(IsErrorResponse): 
+    CMD_TYPE = Frame.Type.AKN
 
     def __init__(self, is_error:bool):
         super().__init__()
