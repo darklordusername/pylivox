@@ -7,24 +7,17 @@ import enum
 from datetime import datetime
 
 #project 
-from  pylivox.control.frame import Frame, FrameResponse
+from  pylivox.control.frame import Frame, Cmd, IsErrorResponse
+
+class PowerMode(enum.Enum):
+    normal      = 0x01
+    powerSaving = 0x02     
+    standby     = 0x03 
+
+class Lidar(Cmd):
+    CMD_SET = Frame.Set.LIDAR
 
 
-class Lidar(Frame):
-    #TODO description 
-    CMD_SET = 1
-    CMD_ID = None
-    CMD_TYPE = None
-
-    def __init__(self):
-        #TODO description
-        super().__init__()
-        self.cmd_set = self.CMD_SET
-        self.cmd_id = None
-
-class _LidarGeneralResponse(FrameResponse, Lidar) :
-    FRAME_TYPE = Frame.Type.AKN
-    __PACK_FORMAT = '<B?' #CMD_ID, result
 
 class ImuDataPushFrequency(enum.Enum):
     Hz_0 = 0
@@ -36,32 +29,37 @@ class ReturnMode(enum.Enum):
     dualReturn = 0x02
     tripleReturn = 0x03
 
-class PowerMode(enum.Enum):
-    normal      = 0x01
-    powerSaving = 0x02     
-    standby     = 0x03 
+
 
 class SetMode(Lidar):
-    CMD_ID = 0x00 
-    FRAME_TYPE = Frame.Type.CMD
-    __PACK_FORMAT = '<BB'#cmd_id, lidar_mode
+    CMD_TYPE = Frame.Type.CMD
+    CMD_ID = Frame.SetLidar.SET_MODE
+    _PACK_FORMAT = '<B'#lidar_mode
 
-    def __init__(self, lidar_mode:'PowerMode|int'):
+    def __init__(self, power_mode:'PowerMode|int'):
         super().__init__()
-        if type(lidar_mode) is int:
-            lidar_mode = PowerMode(lidar_mode)
-        elif type(lidar_mode) is not PowerMode:
-            raise TypeError(f'Bad type for lidar_mode. Expect "PowerMode" or "int". Got {type(lidar_mode)}')
-        self._lidar_mode = lidar_mode.value
+        self.power_mode = power_mode
+
+    @property
+    def power_mode(self)->PowerMode:
+        return self._power_mode
+
+    @power_mode.setter
+    def power_mode(self, value:'PowerMode|int'):
+        if type(value) is int:
+            value = PowerMode(value)
+        elif type(value) is not PowerMode:
+            raise TypeError
+        self._power_mode = value
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self._lidar_mode)
+        payload_body = struct.pack(self._PACK_FORMAT, self.power_mode.value)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, lidar_mode = struct.unpack(SetMode.__PACK_FORMAT, payload)
-        SetMode._check_cmd_id(cmd_id)
+        lidar_mode, = struct.unpack(SetMode._PACK_FORMAT, payload)
         return SetMode(lidar_mode)
 
 class SetModeResponse(SetMode):
@@ -95,7 +93,6 @@ class SetModeResponse(SetMode):
         SetModeResponse._check_cmd_id(cmd_id)
         return SetModeResponse(result)
     
-
 class WriteLiDarExtrinsicParameters(Lidar):
     CMD_ID = 0x01 
     FRAME_TYPE = Frame.Type.CMD
@@ -119,7 +116,6 @@ class WriteLiDarExtrinsicParameters(Lidar):
         cmd_id, roll, pitch, yaw, x, y, z = struct.unpack(WriteLiDarExtrinsicParameters.__PACK_FORMAT, payload)
         WriteLiDarExtrinsicParameters._check_cmd_id(cmd_id)
         return WriteLiDarExtrinsicParameters(roll, pitch, yaw, x, y, z)
-
 
 class ReadLidarExtrinsicParameters(Lidar):
     CMD_ID = 0x02 
@@ -181,7 +177,7 @@ class TurnOnOffRainFogSuppression(Lidar):
         TurnOnOffRainFogSuppression._check_cmd_id(cmd_id)
         return TurnOnOffRainFogSuppression(is_enable)
 
-class TurnOnOffRainFogSuppressionResponse(_LidarGeneralResponse, TurnOnOffRainFogSuppression):
+class TurnOnOffRainFogSuppressionResponse( TurnOnOffRainFogSuppression):
     pass
 
 class SetTurnOnOffFan(Lidar):
@@ -203,7 +199,7 @@ class SetTurnOnOffFan(Lidar):
         SetTurnOnOffFan._check_cmd_id(cmd_id)
         return SetTurnOnOffFan(is_enable)
 
-class SetTurnOnOffFanResponse(_LidarGeneralResponse, SetTurnOnOffFan):
+class SetTurnOnOffFanResponse( SetTurnOnOffFan):
     pass    
 
 class GetTurnOnOffFanState(Lidar):
@@ -224,7 +220,7 @@ class GetTurnOnOffFanState(Lidar):
         GetTurnOnOffFanState._check_cmd_id(cmd_id)
         return GetTurnOnOffFanState()
 
-class GetTurnOnOffFanStateResponse(_LidarGeneralResponse, GetTurnOnOffFanState):
+class GetTurnOnOffFanStateResponse( GetTurnOnOffFanState):
     __PACK_FORMAT = '<B??' #cmd_id, result, state
 
     def __init__(self, result:bool, state:bool):
@@ -270,9 +266,8 @@ class SetLiDarReturnMode(Lidar):
         SetLiDarReturnMode._check_cmd_id(cmd_id)
         return SetLiDarReturnMode(mode)
 
-class SetLiDarReturnModeReponse(_LidarGeneralResponse, SetLiDarReturnMode):
+class SetLiDarReturnModeReponse( SetLiDarReturnMode):
     pass
-
 
 class GetLiDarReturnMode(Lidar):
     CMD_ID = 0x07 
@@ -292,7 +287,7 @@ class GetLiDarReturnMode(Lidar):
         GetLiDarReturnMode._check_cmd_id(cmd_id)
         return GetLiDarReturnMode
 
-class GetLiDarReturnModeResponse(_LidarGeneralResponse, GetLiDarReturnMode):
+class GetLiDarReturnModeResponse( GetLiDarReturnMode):
     __PACK_FORMAT = '<B?B' #cmd_id, result, mode
 
     def __init(self, result:bool, mode:ReturnMode):
@@ -346,7 +341,7 @@ class SetImuDataPushFrequency(Lidar):
         SetImuDataPushFrequency._check_cmd_id(cmd_id)
         return SetImuDataPushFrequency(freq)
 
-class SetImuDataPushFrequencyResponse(_LidarGeneralResponse, SetImuDataPushFrequency):
+class SetImuDataPushFrequencyResponse( SetImuDataPushFrequency):
     pass
 
 class GetImuDataPushFrequency(Lidar):
@@ -367,7 +362,7 @@ class GetImuDataPushFrequency(Lidar):
         GetImuDataPushFrequency._check_cmd_id(cmd_id)
         return GetImuDataPushFrequency()
 
-class GetImuDataPushFrequencyResponse(_LidarGeneralResponse, GetImuDataPushFrequency):
+class GetImuDataPushFrequencyResponse( GetImuDataPushFrequency):
     __PACK_FORMAT = '<BBB' #cmd_id, result, freq
 
     def __init__(self, result:bool, freq:'ImuDataPushFrequency|int'):
@@ -392,8 +387,6 @@ class GetImuDataPushFrequencyResponse(_LidarGeneralResponse, GetImuDataPushFrequ
         cmd_id, result, freq = struct.unpack(GetImuDataPushFrequencyResponse.__PACK_FORMAT, payload)
         GetImuDataPushFrequencyResponse._check_cmd_id(cmd_id)
         return GetImuDataPushFrequencyResponse(result, freq)
-
-
 
 class UpdateUtcSynchronizationTime(Lidar):
     CMD_ID = 0x0A 
@@ -421,5 +414,5 @@ class UpdateUtcSynchronizationTime(Lidar):
         UpdateUtcSynchronizationTime._check_cmd_id(cmd_id)
         return UpdateUtcSynchronizationTime(year, month, day, hour, us)
 
-class UpdateUtcSynchronizationTimeResponse(_LidarGeneralResponse, UpdateUtcSynchronizationTime):
+class UpdateUtcSynchronizationTimeResponse( UpdateUtcSynchronizationTime):
     pass
