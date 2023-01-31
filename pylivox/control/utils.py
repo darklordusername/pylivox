@@ -36,8 +36,8 @@ TypeDict = {
     (Frame.Set.GENERAL.value, Frame.Type.AKN.value, Frame.SetGeneral.READ_CONFIGURATION_PARAMETERS    .value) : general.ReadConfigurationParametersResponse,
     #LIDAR CMD
     (Frame.Set.LIDAR.value, Frame.Type.CMD.value, Frame.SetLidar.SET_MODE                             .value) : lidar.SetMode,
-    (Frame.Set.LIDAR.value, Frame.Type.CMD.value, Frame.SetLidar.WRITE_LI_DAR_EXTRINSIC_PARAMETERS    .value) : lidar.WriteLiDarExtrinsicParameters,
-    (Frame.Set.LIDAR.value, Frame.Type.CMD.value, Frame.SetLidar.READ_LI_DAR_EXTRINSIC_PARAMETERS     .value) : lidar.ReadLidarExtrinsicParameters,
+    (Frame.Set.LIDAR.value, Frame.Type.CMD.value, Frame.SetLidar.WRITE_LIDAR_EXTRINSIC_PARAMETERS    .value) : lidar.WriteLiDarExtrinsicParameters,
+    (Frame.Set.LIDAR.value, Frame.Type.CMD.value, Frame.SetLidar.READ_LIDAR_EXTRINSIC_PARAMETERS     .value) : lidar.ReadLidarExtrinsicParameters,
     (Frame.Set.LIDAR.value, Frame.Type.CMD.value, Frame.SetLidar.TURN_ON_OFF_RAIN_FOG_SUPPRESSION     .value) : lidar.TurnOnOffRainFogSuppression,
     (Frame.Set.LIDAR.value, Frame.Type.CMD.value, Frame.SetLidar.SET_TURN_ON_OFF_FAN                  .value) : lidar.SetTurnOnOffFan,
     (Frame.Set.LIDAR.value, Frame.Type.CMD.value, Frame.SetLidar.GET_TURN_ON_OFF_FAN_STATE            .value) : lidar.GetTurnOnOffFanState,
@@ -48,8 +48,8 @@ TypeDict = {
     (Frame.Set.LIDAR.value, Frame.Type.CMD.value, Frame.SetLidar.UPDATE_UTC_SYNCHRONIZATION_TIME      .value) : lidar.UpdateUtcSynchronizationTime,
     #LIDAR AKN
     (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.SET_MODE                             .value) : lidar.SetModeResponse,
-    (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.WRITE_LI_DAR_EXTRINSIC_PARAMETERS    .value) : lidar.WriteLiDarExtrinsicParametersResponse,
-    (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.READ_LI_DAR_EXTRINSIC_PARAMETERS     .value) : lidar.ReadLidarExtrinsicParametersResponse,
+    (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.WRITE_LIDAR_EXTRINSIC_PARAMETERS    .value) : lidar.WriteLiDarExtrinsicParametersResponse,
+    (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.READ_LIDAR_EXTRINSIC_PARAMETERS     .value) : lidar.ReadLidarExtrinsicParametersResponse,
     (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.TURN_ON_OFF_RAIN_FOG_SUPPRESSION     .value) : lidar.TurnOnOffRainFogSuppressionResponse,
     (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.SET_TURN_ON_OFF_FAN                  .value) : lidar.SetTurnOnOffFanResponse,
     (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.GET_TURN_ON_OFF_FAN_STATE            .value) : lidar.GetTurnOnOffFanStateResponse,

@@ -44,8 +44,8 @@ class Frame(abc.ABC):
 
     class SetLidar(enum.Enum):                    
         SET_MODE                                             = 0x00  
-        WRITE_LI_DAR_EXTRINSIC_PARAMETERS                    = 0x01                           
-        READ_LI_DAR_EXTRINSIC_PARAMETERS                     = 0x02                          
+        WRITE_LIDAR_EXTRINSIC_PARAMETERS                    = 0x01                           
+        READ_LIDAR_EXTRINSIC_PARAMETERS                     = 0x02                          
         TURN_ON_OFF_RAIN_FOG_SUPPRESSION                     = 0x03                          
         SET_TURN_ON_OFF_FAN                                  = 0x04             
         GET_TURN_ON_OFF_FAN_STATE                            = 0x05                   
@@ -57,20 +57,20 @@ class Frame(abc.ABC):
         
     class SetHub(enum.Enum):
         QUERY_CONNECTED_LIDAR_DEVICE                         =  0x00                 
-        SET_LI_DAR_MODE                                      =  0x01 
+        SET_LIDAR_MODE                                      =  0x01 
         TURN_ON_OFF_DESIGNATED_SLOT_POWER                    =  0x02                   
-        WRITE_LI_DAR_EXTRINSIC_PARAMETERS                    =  0x03                   
-        READ_LI_DAR_EXTRINSIC_PARAMETERS                     =  0x04                  
-        QUERY_LI_DAR_DEVICE_STATUS                           =  0x05            
+        WRITE_LIDAR_EXTRINSIC_PARAMETERS                    =  0x03                   
+        READ_LIDAR_EXTRINSIC_PARAMETERS                     =  0x04                  
+        QUERY_LIDAR_DEVICE_STATUS                           =  0x05            
         TURN_ON_OFF_HUB_CALCULATION_OF_EXTRINSIC_PARAMETERS  =  0x06                                     
-        TURN_ON_OFF_LI_DAR_RAIN_FOG_SUPPRESSION              =  0x07                         
+        TURN_ON_OFF_LIDAR_RAIN_FOG_SUPPRESSION              =  0x07                         
         QUERY_HUB_SLOT_POWER_STATUS                          =  0x08             
-        SET_LI_DAR_TURN_ON_OFF_FAN                           =  0x09            
-        GET_LI_DAR_TURN_ON_OFF_FAN_STATE                     =  0x0A                  
-        SET_LI_DAR_RETURN_MODE                               =  0x0B        
-        GET_LI_DAR_RETURN_MODE                               =  0x0C        
-        SET_LI_DAR_IMU_DATA_PUSH_FREQUENCY                   =  0x0D                    
-        GET_LI_DAR_IMU_DATA_PUSH_FREQUENCY                   =  0x0E       
+        SET_LIDAR_TURN_ON_OFF_FAN                           =  0x09            
+        GET_LIDAR_TURN_ON_OFF_FAN_STATE                     =  0x0A                  
+        SET_LIDAR_RETURN_MODE                               =  0x0B        
+        GET_LIDAR_RETURN_MODE                               =  0x0C        
+        SET_LIDAR_IMU_DATA_PUSH_FREQUENCY                   =  0x0D                    
+        GET_LIDAR_IMU_DATA_PUSH_FREQUENCY                   =  0x0E       
 
     START = 0xAA
     VERSION = 0x01
