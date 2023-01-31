@@ -143,3 +143,12 @@ class FrameResponse(Frame):
 
     def __init__(self):
         super().__init__()
+
+
+class Cmd(Frame):
+    CMD_SET = None
+    CMD_ID = None
+
+    def payload(self, payload_body:bytes):
+        format = f'<BB{len(payload_body)}B' #CMD_SET, CMD_ID, BODY
+        return struct.pack(format, self.CMD_SET.value, self.CMD_ID.value, *payload_body )

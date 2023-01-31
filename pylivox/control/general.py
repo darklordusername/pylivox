@@ -7,19 +7,11 @@ import struct
 import ipaddress
 
 #project 
-from pylivox.control.frame import Frame
+from pylivox.control.frame import Frame, Cmd
 
 DEVICE_MODE = 'LIDAR' #'HUB'
 
-class CMD(Frame):
-    CMD_SET = None
-    CMD_ID = None
-
-    def payload(self, payload_body:bytes):
-        format = f'<BB{len(payload_body)}B' #CMD_SET, CMD_ID, BODY
-        return struct.pack(format, self.CMD_SET.value, self.CMD_ID.value, *payload_body )
-
-class General(CMD):
+class General(Cmd):
     CMD_SET = Frame.Set.GENERAL
 
 class IsErrorResponse:
