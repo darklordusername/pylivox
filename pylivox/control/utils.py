@@ -53,7 +53,7 @@ TypeDict = {
     (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.TURN_ON_OFF_RAIN_FOG_SUPPRESSION     .value) : lidar.TurnOnOffRainFogSuppressionResponse,
     (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.SET_TURN_ON_OFF_FAN                  .value) : lidar.SetTurnOnOffFanResponse,
     (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.GET_TURN_ON_OFF_FAN_STATE            .value) : lidar.GetTurnOnOffFanStateResponse,
-    # (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.SET_LIDAR_RETURN_MODE                .value) : lidar.SetLiDarReturnModeResponse,
+    (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.SET_LIDAR_RETURN_MODE                .value) : lidar.SetLiDarReturnModeResponse,
     (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.GET_LIDAR_RETURN_MODE                .value) : lidar.GetLiDarReturnModeResponse,
     (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.SET_IMU_DATA_PUSH_FREQUENCY          .value) : lidar.SetImuDataPushFrequencyResponse,
     (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.GET_IMU_DATA_PUSH_FREQUENCY          .value) : lidar.GetImuDataPushFrequencyResponse,

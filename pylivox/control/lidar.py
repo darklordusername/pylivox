@@ -270,8 +270,8 @@ class SetLiDarReturnMode(Lidar):
         return_mode, = struct.unpack(SetLiDarReturnMode._PACK_FORMAT, payload)
         return SetLiDarReturnMode(return_mode)
 
-class SetLiDarReturnModeReponse( SetLiDarReturnMode):
-    pass
+class SetLiDarReturnModeResponse( Lidar, IsErrorResponseOnly):
+    CMD_ID = Frame.SetLidar.SET_LIDAR_RETURN_MODE
 
 class GetLiDarReturnMode(Lidar):
     CMD_ID = 0x07 
