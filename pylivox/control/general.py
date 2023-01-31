@@ -917,7 +917,7 @@ class ReadConfigurationParameters(General):
     CMD_TYPE = Frame.Type.CMD
     CMD_ID = Frame.SetGeneral.READ_CONFIGURATION_PARAMETERS
 
-    def __init__(self, keys_quantity:int, keys:bytes):
+    def __init__(self, keys_quantity:int, keys:'list(ConfigurationParameter.Key)'):
         super().__init__()
         self.keys_quantity = keys_quantity
         self.keys = keys
@@ -933,25 +933,26 @@ class ReadConfigurationParameters(General):
         self._keys_quantity = value
 
     @property
-    def keys(self)->bytes:
+    def keys(self)->'list(ConfigurationParameter.Key)':
         return self._keys
     
     @keys.setter
-    def keys(self, value:bytes):
-        if type(value) is not bytes:
+    def keys(self, value:'list(ConfigurationParameter.Key)'):
+        if type(value) is not list or  [key for key in value if type(key) is not ConfigurationParameter.Key]:
             raise TypeError
         self._keys = value
 
     @property
     def payload(self)->bytes:
-        payload_body = struct.pack(f'<B{self.keys_quantity}B', self.keys_quantity, *self.keys)
+        payload_body = struct.pack(f'<B{self.keys_quantity}H', self.keys_quantity, *[key.value for key in self.keys])
         return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
         keys_quantity = payload[0]
-        keys = payload[1:]
-        return WriteConfigurationParameters(keys_quantity, keys)
+        keys_bytes = [payload[2*i+1:2*i+3] for i in range(keys_quantity)]
+        keys = [ ConfigurationParameter.Key(int.from_bytes(key,'little')) for key in keys_bytes]
+        return ReadConfigurationParameters(keys_quantity, keys)
     
 
 class ReadConfigurationParametersResponse(General):

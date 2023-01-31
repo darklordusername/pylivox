@@ -76,6 +76,15 @@ def cmd_payload(payload:str):
     (g.WriteConfigurationParametersResponse, {'is_error': False, 
                                                 'error_key' :g.ConfigurationParameter.Key.HIGH_SENSITIVITY_FUNCTION, 
                                                 'error_code': g.ConfigurationParameter.ErrorCode.NO_ERROR}                        , cmd_payload('aa     01                1300    01        0000  0000      00       0b         00         0100       00                           00000000')),
+                                                                                                                                                                                                                                #keys_quantity, keys                                                
+    (g.ReadConfigurationParameters         , {'keys_quantity': 2, 
+                                              'keys': [g.ConfigurationParameter.Key.HIGH_SENSITIVITY_FUNCTION,
+                                                       g.ConfigurationParameter.Key.SWITCH_REPETITIVE_NON_REPETITIVE_SCANNING_PATTERN]} 
+                                                                                                                                  , cmd_payload('aa     01                1400    00        0000  0000      00       0c         02              0100 0200                          00000000')),
+
+
+    # (g.SetMode                         , {}                                                                                   , cmd_payload('aa     01                0000    01        0000  0000      00       01                                                                00000000')),
+
                                                                                                                                                                                                                                 #
     # (lidar.SetMode                         , {}                                                                                   , cmd_payload('aa     01                0000    01        0000  0000      00       01                                                                00000000')),
     #                                                                                                                                                                                                                             #
