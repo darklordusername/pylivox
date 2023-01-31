@@ -99,11 +99,11 @@ class SetModeResponse(Lidar):
         return SetModeResponse(result)
     
 class WriteLiDarExtrinsicParameters(Lidar):
-    CMD_ID = 0x01 
-    FRAME_TYPE = Frame.Type.CMD
-    __PACK_FORMAT = '<BIIIIII' #cmd_id, roll, pitch, yaw, x, y, z
+    CMD_TYPE = Frame.Type.CMD
+    CMD_ID = Frame.SetLidar.WRITE_LI_DAR_EXTRINSIC_PARAMETERS 
+    _PACK_FORMAT = '<fffIII' #roll, pitch, yaw, x, y, z
 
-    def __init__(self, roll:int, pitch:int, yaw:int, x:int, y:int, z:int):
+    def __init__(self, roll:float, pitch:float, yaw:float, x:int, y:int, z:int):
         super().__init__()
         self.roll = roll
         self.pitch = pitch
@@ -114,12 +114,12 @@ class WriteLiDarExtrinsicParameters(Lidar):
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self.roll, self.pitch, self.yaw, self.x, self.y, self.z)
+        payload_body = struct.pack(self._PACK_FORMAT, self.roll, self.pitch, self.yaw, self.x, self.y, self.z)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, roll, pitch, yaw, x, y, z = struct.unpack(WriteLiDarExtrinsicParameters.__PACK_FORMAT, payload)
-        WriteLiDarExtrinsicParameters._check_cmd_id(cmd_id)
+        roll, pitch, yaw, x, y, z = struct.unpack(WriteLiDarExtrinsicParameters._PACK_FORMAT, payload)
         return WriteLiDarExtrinsicParameters(roll, pitch, yaw, x, y, z)
 
 class ReadLidarExtrinsicParameters(Lidar):
