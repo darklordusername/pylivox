@@ -164,9 +164,9 @@ class ReadLidarExtrinsicParametersResponse(Lidar, IsErrorResponse):
         return ReadLidarExtrinsicParametersResponse(is_error, roll, pitch, yaw, x, y, z)
 
 class TurnOnOffRainFogSuppression(Lidar):
-    CMD_ID = 0x03 
-    FRAME_TYPE = Frame.Type.CMD
-    __PACK_FORMAT = '<B?' # cmd_id, is_enable
+    CMD_TYPE = Frame.Type.CMD
+    CMD_ID = Frame.SetLidar.TURN_ON_OFF_RAIN_FOG_SUPPRESSION 
+    _PACK_FORMAT = '<?' # is_enable
 
     def __init__(self, is_enable:bool):
         super().__init__()
@@ -174,12 +174,12 @@ class TurnOnOffRainFogSuppression(Lidar):
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self.is_enable)
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_enable)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, is_enable = struct.unpack(TurnOnOffRainFogSuppression.__PACK_FORMAT, payload)
-        TurnOnOffRainFogSuppression._check_cmd_id(cmd_id)
+        is_enable = struct.unpack(TurnOnOffRainFogSuppression._PACK_FORMAT, payload)
         return TurnOnOffRainFogSuppression(is_enable)
 
 class TurnOnOffRainFogSuppressionResponse( TurnOnOffRainFogSuppression):
