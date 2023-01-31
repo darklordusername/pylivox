@@ -276,20 +276,14 @@ class SetLidarReturnModeResponse( Lidar, IsErrorResponseOnly):
 class GetLidarReturnMode(Lidar):
     CMD_TYPE = Frame.Type.CMD
     CMD_ID = Frame.SetLidar.GET_LIDAR_RETURN_MODE 
-    __PACK_FORMAT = '<B' #cmd_id
-
-    def __init__(self):
-        super().__init__()
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT)
+        return super().payload(b'')
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id = struct.unpack(GetLidarReturnMode.__PACK_FORMAT, payload)
-        GetLidarReturnMode._check_cmd_id(cmd_id)
-        return GetLidarReturnMode
+        return GetLidarReturnMode()
 
 class GetLidarReturnModeResponse( GetLidarReturnMode):
     __PACK_FORMAT = '<B?B' #cmd_id, result, mode
