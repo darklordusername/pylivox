@@ -414,5 +414,5 @@ class UpdateUtcSynchronizationTime(Lidar):
         year, month, day, hour, us = struct.unpack(UpdateUtcSynchronizationTime._PACK_FORMAT, payload)
         return UpdateUtcSynchronizationTime(year, month, day, hour, us)
 
-class UpdateUtcSynchronizationTimeResponse( UpdateUtcSynchronizationTime):
-    pass
+class UpdateUtcSynchronizationTimeResponse( Lidar, IsErrorResponseOnly):
+    CMD_ID = Frame.SetLidar.UPDATE_UTC_SYNCHRONIZATION_TIME
