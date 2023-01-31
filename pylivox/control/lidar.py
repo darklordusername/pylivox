@@ -219,23 +219,25 @@ class GetTurnOnOffFanState(Lidar):
     def from_payload(payload:bytes):
         return GetTurnOnOffFanState()
 
-class GetTurnOnOffFanStateResponse( GetTurnOnOffFanState):
-    __PACK_FORMAT = '<B??' #cmd_id, result, state
+class GetTurnOnOffFanStateResponse( Lidar, IsErrorResponse):
+    CMD_TYPE = Frame.Type.AKN
+    CMD_ID = Frame.SetLidar.GET_TURN_ON_OFF_FAN_STATE
+    _PACK_FORMAT = '<??' #is_error, state
 
-    def __init__(self, result:bool, state:bool):
+    def __init__(self, is_error:bool, state:bool):
         super().__init__()
-        self.result = result
+        self.is_error = is_error
         self.state = state
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self.result, self.state)
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_error, self.state)
+        return super().payload(payload_body)
 
     @staticmethod
-    def payload(payload:bytes):
-        cmd_id, result, state = struct.unpack(GetTurnOnOffFanStateResponse.__PACK_FORMAT, payload)
-        GetTurnOnOffFanStateResponse._check_cmd_id(cmd_id)
-        return GetTurnOnOffFanStateResponse(result, state)
+    def from_payload(payload:bytes):
+        is_error, state = struct.unpack(GetTurnOnOffFanStateResponse._PACK_FORMAT, payload)
+        return GetTurnOnOffFanStateResponse(is_error, state)
 
 class SetLiDarReturnMode(Lidar):
     CMD_ID = 0x06 

@@ -155,7 +155,7 @@ class Cmd(Frame):
 
 
 class IsErrorResponse(Cmd):
-
+    CMD_TYPE = Frame.Type.AKN
     _PACK_FORMAT = '<?' # is_error
 
     @property
@@ -170,7 +170,6 @@ class IsErrorResponse(Cmd):
 
 
 class IsErrorResponseOnly(IsErrorResponse): 
-    CMD_TYPE = Frame.Type.AKN
 
     def __init__(self, is_error:bool):
         super().__init__()
