@@ -7,7 +7,7 @@ import enum
 from datetime import datetime
 
 #project 
-from  pylivox.control.frame import Frame, Cmd, IsErrorResponse
+from  pylivox.control.frame import Frame, Cmd, IsErrorResponse, IsErrorResponseOnly
 
 class PowerMode(enum.Enum):
     normal      = 0x01
@@ -121,6 +121,10 @@ class WriteLiDarExtrinsicParameters(Lidar):
     def from_payload(payload:bytes):
         roll, pitch, yaw, x, y, z = struct.unpack(WriteLiDarExtrinsicParameters._PACK_FORMAT, payload)
         return WriteLiDarExtrinsicParameters(roll, pitch, yaw, x, y, z)
+
+class WriteLiDarExtrinsicParametersResponse(Lidar, IsErrorResponseOnly):
+    CMD_TYPE = Frame.Type.AKN
+    CMD_ID = Frame.SetLidar.WRITE_LI_DAR_EXTRINSIC_PARAMETERS
 
 class ReadLidarExtrinsicParameters(Lidar):
     CMD_ID = 0x02 

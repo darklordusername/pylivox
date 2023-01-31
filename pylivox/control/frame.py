@@ -154,7 +154,10 @@ class Cmd(Frame):
         return struct.pack(format, self.CMD_SET.value, self.CMD_ID.value, *payload_body )
 
 
-class IsErrorResponse:
+class IsErrorResponse(Cmd):
+
+    _PACK_FORMAT = '<?' # is_error
+
     @property
     def is_error(self)->bool:
         return self._is_error
@@ -164,3 +167,21 @@ class IsErrorResponse:
         if type(value) is not bool:
             raise TypeError
         self._is_error = value
+
+
+class IsErrorResponseOnly(IsErrorResponse): 
+
+    def __init__(self, is_error:bool):
+        super().__init__()
+        self.is_error = is_error
+
+    @property
+    def payload(self)->bytes:
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_error)
+        return super().payload(payload_body)
+
+    @classmethod
+    def from_payload(cls, payload:bytes):
+        is_error, = struct.unpack(cls._PACK_FORMAT, payload)
+        return cls(is_error)
+

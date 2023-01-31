@@ -48,7 +48,7 @@ TypeDict = {
     (Frame.Set.LIDAR.value, Frame.Type.CMD.value, Frame.SetLidar.UPDATE_UTC_SYNCHRONIZATION_TIME      .value) : lidar.UpdateUtcSynchronizationTime,
     #LIDAR AKN
     (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.SET_MODE                             .value) : lidar.SetModeResponse,
-    # (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.WRITE_LI_DAR_EXTRINSIC_PARAMETERS    .value) : lidar.WriteLiDarExtrinsicParametersResponse,
+    (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.WRITE_LI_DAR_EXTRINSIC_PARAMETERS    .value) : lidar.WriteLiDarExtrinsicParametersResponse,
     (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.READ_LI_DAR_EXTRINSIC_PARAMETERS     .value) : lidar.ReadLidarExtrinsicParametersResponse,
     (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.TURN_ON_OFF_RAIN_FOG_SUPPRESSION     .value) : lidar.TurnOnOffRainFogSuppressionResponse,
     (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.SET_TURN_ON_OFF_FAN                  .value) : lidar.SetTurnOnOffFanResponse,
