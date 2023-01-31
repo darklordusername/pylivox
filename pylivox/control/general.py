@@ -7,23 +7,12 @@ import struct
 import ipaddress
 
 #project 
-from pylivox.control.frame import Frame, Cmd
+from pylivox.control.frame import Frame, Cmd, IsErrorResponse
 
 DEVICE_MODE = 'LIDAR' #'HUB'
 
 class General(Cmd):
     CMD_SET = Frame.Set.GENERAL
-
-class IsErrorResponse:
-    @property
-    def is_error(self)->bool:
-        return self._is_error
-
-    @is_error.setter
-    def is_error(self, value:bool):
-        if type(value) is not bool:
-            raise TypeError
-        self._is_error = value
 
 
 class WorkState():

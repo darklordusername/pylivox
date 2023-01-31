@@ -152,3 +152,15 @@ class Cmd(Frame):
     def payload(self, payload_body:bytes):
         format = f'<BB{len(payload_body)}B' #CMD_SET, CMD_ID, BODY
         return struct.pack(format, self.CMD_SET.value, self.CMD_ID.value, *payload_body )
+
+
+class IsErrorResponse:
+    @property
+    def is_error(self)->bool:
+        return self._is_error
+
+    @is_error.setter
+    def is_error(self, value:bool):
+        if type(value) is not bool:
+            raise TypeError
+        self._is_error = value
