@@ -179,7 +179,7 @@ class TurnOnOffRainFogSuppression(Lidar):
 
     @staticmethod
     def from_payload(payload:bytes):
-        is_enable = struct.unpack(TurnOnOffRainFogSuppression._PACK_FORMAT, payload)
+        is_enable, = struct.unpack(TurnOnOffRainFogSuppression._PACK_FORMAT, payload)
         return TurnOnOffRainFogSuppression(is_enable)
 
 class TurnOnOffRainFogSuppressionResponse(Lidar, IsErrorResponseOnly):
@@ -187,9 +187,9 @@ class TurnOnOffRainFogSuppressionResponse(Lidar, IsErrorResponseOnly):
     CMD_ID = Frame.SetLidar.TURN_ON_OFF_RAIN_FOG_SUPPRESSION
 
 class SetTurnOnOffFan(Lidar):
-    CMD_ID = 0x04 
-    FRAME_TYPE = Frame.Type.CMD
-    __PACK_FORMAT = '<B?' #cmd_id, is_enable
+    CMD_TYPE = Frame.Type.CMD
+    CMD_ID = Frame.SetLidar.SET_TURN_ON_OFF_FAN 
+    _PACK_FORMAT = '<?' #is_enable
 
     def __init__(self, is_enable:bool):
         super().__init__()
@@ -197,12 +197,12 @@ class SetTurnOnOffFan(Lidar):
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self.is_enable)
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_enable)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, is_enable = struct.unpack(SetTurnOnOffFan.__PACK_FORMAT, payload)
-        SetTurnOnOffFan._check_cmd_id(cmd_id)
+        is_enable, = struct.unpack(SetTurnOnOffFan._PACK_FORMAT, payload)
         return SetTurnOnOffFan(is_enable)
 
 class SetTurnOnOffFanResponse( SetTurnOnOffFan):
