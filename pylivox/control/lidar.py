@@ -29,6 +29,9 @@ class ReturnMode(enum.Enum):
     DUAL_RETURN= 0x02
     TRIPLE_RETURN= 0x03
 
+class PushFrequency(enum.Enum):
+    FREQ_0HZ = 0
+    FREQ_200HZ = 1
 
 
 class SetMode(Lidar):
@@ -317,32 +320,35 @@ class GetLidarReturnModeResponse(Lidar, IsErrorResponse):
         return GetLidarReturnModeResponse(is_error, return_mode)
     
 class SetImuDataPushFrequency(Lidar):
-    CMD_ID = 0x08 
-    FRAME_TYPE = Frame.Type.CMD
-    __PACK_FORMAT = '<BB' #CMD_ID, FREQ
+    CMD_TYPE = Frame.Type.CMD
+    CMD_ID = Frame.SetLidar.SET_IMU_DATA_PUSH_FREQUENCY
+    _PACK_FORMAT = '<B' # frequency
 
-
-    def __init__(self, freq:'Frequency|int'):
+    def __init__(self, frequency:'PushFrequency|int'):
         super().__init__()
-        # if type(freq) is int:
-        #     freq = self.Frequency(freq)
-        # elif type(freq) is not self.Frequency:
-        #     raise TypeError(f'Bad type for freq. Expect "Frequency" or "int". Got {type(freq)}')
-        # self._freq = freq.value
+        self.frequency = frequency
 
-    # @property
-    # def freq(self)->Frequency:
-    #     return self.Frequency(self._freq)
+    @property
+    def frequency(self)->PushFrequency:
+        return self._frequency
+
+    @frequency.setter
+    def frequency(self, value:'PushFrequency|int'):
+        if type(value) is int:
+            value = PushFrequency(value)
+        elif type(value) is not PushFrequency:
+            raise TypeError
+        self._frequency = value
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self._freq)
+        payload_body = struct.pack(self._PACK_FORMAT, self.frequency.value)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, freq = struct.unpack(SetImuDataPushFrequency.__PACK_FORMAT, payload)
-        SetImuDataPushFrequency._check_cmd_id(cmd_id)
-        return SetImuDataPushFrequency(freq)
+        frequency, = struct.unpack(SetImuDataPushFrequency._PACK_FORMAT, payload)
+        return SetImuDataPushFrequency(frequency)
 
 class SetImuDataPushFrequencyResponse( SetImuDataPushFrequency):
     pass
