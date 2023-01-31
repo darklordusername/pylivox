@@ -81,9 +81,12 @@ def cmd_payload(payload:str):
                                               'keys': [g.ConfigurationParameter.Key.HIGH_SENSITIVITY_FUNCTION,
                                                        g.ConfigurationParameter.Key.SWITCH_REPETITIVE_NON_REPETITIVE_SCANNING_PATTERN]} 
                                                                                                                                   , cmd_payload('aa     01                1400    00        0000  0000      00       0c         02              0100 0200                          00000000')),
-
-
-    # (g.SetMode                         , {}                                                                                   , cmd_payload('aa     01                0000    01        0000  0000      00       01                                                                00000000')),
+                                                                                                                                                                                                                                #is_error, error_key, error_code, param_list                                                                                     
+    (g.ReadConfigurationParametersResponse, {'is_error': False, 
+                                            'error_key' :g.ConfigurationParameter.Key.HIGH_SENSITIVITY_FUNCTION, 
+                                            'error_code': g.ConfigurationParameter.ErrorCode.NO_ERROR,
+                                            'param_list': [g.ConfigurationParameter( g.ConfigurationParameter.Key.HIGH_SENSITIVITY_FUNCTION, True )]
+                                            }                                                                                     , cmd_payload('aa     01                1800    01        0000  0000      00       0c          00         0100       00          0100050001       00000000')),
 
                                                                                                                                                                                                                                 #
     # (lidar.SetMode                         , {}                                                                                   , cmd_payload('aa     01                0000    01        0000  0000      00       01                                                                00000000')),

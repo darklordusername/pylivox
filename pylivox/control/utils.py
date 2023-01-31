@@ -34,7 +34,7 @@ TypeDict = {
     (Frame.Set.GENERAL.value, Frame.Type.AKN.value, Frame.SetGeneral.GET_DEVICE_IP_INFORMATION        .value) : general.GetDeviceIpInformationResponse,
     (Frame.Set.GENERAL.value, Frame.Type.AKN.value, Frame.SetGeneral.REBOOT_DEVICE                    .value) : general.RebootDeviceResponse,
     (Frame.Set.GENERAL.value, Frame.Type.AKN.value, Frame.SetGeneral.WRITE_CONFIGURATION_PARAMETERS   .value) : general.WriteConfigurationParametersResponse,
-    # (Frame.Set.GENERAL.value, Frame.Type.AKN.value, Frame.SetGeneral.READ_CONFIGURATION_PARAMETERS    .value) : general.ReadConfigurationParametersResponse,
+    (Frame.Set.GENERAL.value, Frame.Type.AKN.value, Frame.SetGeneral.READ_CONFIGURATION_PARAMETERS    .value) : general.ReadConfigurationParametersResponse,
     #LIDAR CMD
     (Frame.Set.LIDAR.value, Frame.Type.CMD.value, Frame.SetLidar.SET_MODE                             .value) : lidar.SetMode,
     (Frame.Set.LIDAR.value, Frame.Type.CMD.value, Frame.SetLidar.WRITE_LI_DAR_EXTRINSIC_PARAMETERS    .value) : lidar.WriteLiDarExtrinsicParameters,
