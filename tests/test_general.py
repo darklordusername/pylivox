@@ -119,8 +119,8 @@ def cmd_payload(payload:str):
     (lidar.SetLidarReturnModeResponse       , {'is_error': False}                                                                 , cmd_payload('aa     01                1000    01        0000  0000      01       06         00                                                     00000000')),
                                                                                                                                                                                                                                 #
     (lidar.GetLidarReturnMode               , {}                                                                                  , cmd_payload('aa     01                0f00    00        0000  0000      01       07                                                                00000000')),
-    #                                         #
-    # (lidar.GetLidarReturnModeResponse       , {}                                                                                   , cmd_payload('aa     01                0000    01        0000  0000      00       01                                                                00000000')),
+                                                                                                                                                                                                                                #is_error, return_mode            
+    (lidar.GetLidarReturnModeResponse       , {'is_error': False, 'return_mode': lidar.ReturnMode.DUAL_RETURN}                    , cmd_payload('aa     01                1100    01        0000  0000      01       07         00         02                                          00000000')),
     #                                         #
     # (lidar.SetImuDataPushFrequency          , {}                                                                                   , cmd_payload('aa     01                0000    01        0000  0000      00       01                                                                00000000')),
     #                                         #

@@ -285,31 +285,36 @@ class GetLidarReturnMode(Lidar):
     def from_payload(payload:bytes):
         return GetLidarReturnMode()
 
-class GetLidarReturnModeResponse( GetLidarReturnMode):
-    __PACK_FORMAT = '<B?B' #cmd_id, result, mode
+class GetLidarReturnModeResponse(Lidar, IsErrorResponse):
+    CMD_ID = Frame.SetLidar.GET_LIDAR_RETURN_MODE
+    _PACK_FORMAT = '<?B' #is_error, return_mode
 
-    def __init(self, result:bool, mode:ReturnMode):
+    def __init__(self, is_error:bool, return_mode:'ReturnMode|int'):
         super().__init__()
-        self.result = result
-        if type(mode) is int:
-            mode = ReturnMode
-        elif type(mode) is not ReturnMode:
-            raise TypeError(f'Bad type for mode. Expect "ReturnMode" or "int". Got {type(mode)}')
-        self._mode = mode
+        self.result = is_error
+        self.return_mode = return_mode
 
     @property
-    def mode(self)->ReturnMode:
-        return ReturnMode(self._mode)
+    def return_mode(self)->ReturnMode:
+        return self._return_mode
+
+    @return_mode.setter
+    def return_mode(self, value:'ReturnMode|int'):
+        if type(value) is int:
+            value = ReturnMode(value)
+        elif type(value) is not ReturnMode:
+            raise TypeError
+        self._return_mode = value
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self.result, self._mode)
+        payload_body = struct.pack(self._PACK_FORMAT, self.result, self.return_mode.value)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, result, mode = struct.unpack(GetLidarReturnModeResponse.__PACK_FORMAT, payload)
-        GetLidarReturnModeResponse._check_cmd_id(cmd_id)
-        return GetLidarReturnModeResponse(result, mode)
+        is_error, return_mode = struct.unpack(GetLidarReturnModeResponse._PACK_FORMAT, payload)
+        return GetLidarReturnModeResponse(is_error, return_mode)
     
 class SetImuDataPushFrequency(Lidar):
     CMD_ID = 0x08 
