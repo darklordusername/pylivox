@@ -17,12 +17,6 @@ class PowerMode(enum.Enum):
 class Lidar(Cmd):
     CMD_SET = Frame.Set.LIDAR
 
-
-
-class ImuDataPushFrequency(enum.Enum):
-    Hz_0 = 0
-    Hz_200 = 1
-
 class ReturnMode(enum.Enum):
     SINGLE_RETURN_FIRST= 0x00
     SINGLE_RETURN_STRONGEST= 0x01
@@ -365,31 +359,36 @@ class GetImuDataPushFrequency(Lidar):
     def from_payload(payload:bytes):
         return GetImuDataPushFrequency()
 
-class GetImuDataPushFrequencyResponse( GetImuDataPushFrequency):
-    __PACK_FORMAT = '<BBB' #cmd_id, result, freq
+class GetImuDataPushFrequencyResponse( Lidar, IsErrorResponse):
+    CMD_ID = Frame.SetLidar.GET_IMU_DATA_PUSH_FREQUENCY
+    _PACK_FORMAT = '<?B' #is_error, frequency
 
-    def __init__(self, result:bool, freq:'ImuDataPushFrequency|int'):
+    def __init__(self, is_error:bool, frequency:'PushFrequency|int'):
         super().__init__()
-        self.result = result
-        if type(freq) is int:
-            freq = ImuDataPushFrequency(freq)
-        elif type(freq) is not ImuDataPushFrequency:
-            raise TypeError(f'Bad type for freq. Expect "ImuDataPushFrequency" or "int". Got {type(freq)}')
-        self._freq = freq.value
+        self.is_error = is_error
+        self.frequency = frequency
 
     @property
-    def freq(self)->ImuDataPushFrequency:
-        return ImuDataPushFrequency(self._freq)
+    def frequency(self)->PushFrequency:
+        return self._frequency
+
+    @frequency.setter
+    def frequency(self, value:'PushFrequency|int'):
+        if type(value) is int:
+            value = PushFrequency(value)
+        elif type(value) is not PushFrequency:
+            raise TypeError
+        self._frequency = value
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self.result, self._freq)
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_error, self.frequency.value)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, result, freq = struct.unpack(GetImuDataPushFrequencyResponse.__PACK_FORMAT, payload)
-        GetImuDataPushFrequencyResponse._check_cmd_id(cmd_id)
-        return GetImuDataPushFrequencyResponse(result, freq)
+        is_error, frequency = struct.unpack(GetImuDataPushFrequencyResponse._PACK_FORMAT, payload)
+        return GetImuDataPushFrequencyResponse(is_error, frequency)
 
 class UpdateUtcSynchronizationTime(Lidar):
     CMD_ID = 0x0A 

@@ -127,8 +127,8 @@ def cmd_payload(payload:str):
     (lidar.SetImuDataPushFrequencyResponse  , {'is_error': False}                                                                 , cmd_payload('aa     01                1000    01        0000  0000      01       08         00                                                     00000000')),
                                             
     (lidar.GetImuDataPushFrequency          , {}                                                                                  , cmd_payload('aa     01                0f00    00        0000  0000      01       09                                                                00000000')),
-    #                                         #
-    # (lidar.GetImuDataPushFrequencyResponse  , {}                                                                                   , cmd_payload('aa     01                0000    01        0000  0000      00       01                                                                00000000')),
+                                                                                                                                                                                                                                #is_error, frequency_code
+    (lidar.GetImuDataPushFrequencyResponse  , {'is_error': False, 'frequency': lidar.PushFrequency.FREQ_0HZ}                      , cmd_payload('aa     01                1100    01        0000  0000      01       09         00         00                                          00000000')),
     #                                         #
     # (lidar.UpdateUtcSynchronizationTime     , {}                                                                                   , cmd_payload('aa     01                0000    01        0000  0000      00       01                                                                00000000')),
     #                                                                                                                                                                                                                             #
