@@ -62,9 +62,10 @@ class SetMode(Lidar):
         lidar_mode, = struct.unpack(SetMode._PACK_FORMAT, payload)
         return SetMode(lidar_mode)
 
-class SetModeResponse(SetMode):
-    FRAME_TYPE = Frame.Type.AKN
-    __PACK_FORMAT = '<BB' #cmd_id, Result
+class SetModeResponse(Lidar):
+    CMD_TYPE = Frame.Type.AKN
+    CMD_ID = Frame.SetLidar.SET_MODE
+    _PACK_FORMAT = '<B' #Result
     
     class Result(enum.Enum):
         Success = 0
@@ -73,24 +74,28 @@ class SetModeResponse(SetMode):
 
     def __init__(self, result:'Result|int'):
         super().__init__()
-        if type(result) is int:
-            result = self.Result(result)
-        elif type(result) is not self.Result:
-            raise TypeError(f'Bad type for result. Expect "Result" or "int". Got {type(result)}')
-        self._result = result
+        self.result = result
 
     @property
     def result(self)->Result:
-        return self.Result(self._result)
+        return self._result
+
+    @result.setter
+    def result(self, value:'Result|int'):
+        if type(value) is int:
+            value = self.Result(value)
+        elif type(value) is not self.Result:
+            raise TypeError
+        self._result = value
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self._result)
+        payload_body = struct.pack(self._PACK_FORMAT, self.result.value)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, result = struct.unpack(SetModeResponse.__PACK_FORMAT, payload)
-        SetModeResponse._check_cmd_id(cmd_id)
+        result, = struct.unpack(SetModeResponse._PACK_FORMAT, payload)
         return SetModeResponse(result)
     
 class WriteLiDarExtrinsicParameters(Lidar):
