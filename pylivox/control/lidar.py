@@ -391,29 +391,27 @@ class GetImuDataPushFrequencyResponse( Lidar, IsErrorResponse):
         return GetImuDataPushFrequencyResponse(is_error, frequency)
 
 class UpdateUtcSynchronizationTime(Lidar):
-    CMD_ID = 0x0A 
-    FRAME_TYPE = Frame.Type.CMD
-    __PACK_FORMAT = '<BBBBBI' #cmd_id, year, month, day, hour, microseconds
+    CMD_TYPE = Frame.Type.CMD
+    CMD_ID = Frame.SetLidar.UPDATE_UTC_SYNCHRONIZATION_TIME 
+    _PACK_FORMAT = '<BBBBI' #year, month, day, hour, microseconds
 
-    def __init__(self, year:int, month:int, day:int, hour:int, us:int):
+    def __init__(self, year:int, month:int, day:int, hour:int, microseconds:int):
         super().__init__()
-        if year > 255:
-            raise ValueError(f'year should be less then 255')
         datetime(year, month, day, hour)
         self.year = year
         self.month = month
         self.day = day
         self.hour = hour 
-        self.us = us
+        self.microseconds = microseconds
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self.__PACK_FORMAT, self.CMD_ID, self.year, self.month, self.day, self.hour, self.us)
+        payload_body = struct.pack(self._PACK_FORMAT, self.year, self.month, self.day, self.hour, self.microseconds)
+        return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        cmd_id, year, month, day, hour, us = struct.unpack(UpdateUtcSynchronizationTime.__PACK_FORMAT, payload)
-        UpdateUtcSynchronizationTime._check_cmd_id(cmd_id)
+        year, month, day, hour, us = struct.unpack(UpdateUtcSynchronizationTime._PACK_FORMAT, payload)
         return UpdateUtcSynchronizationTime(year, month, day, hour, us)
 
 class UpdateUtcSynchronizationTimeResponse( UpdateUtcSynchronizationTime):
