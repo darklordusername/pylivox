@@ -137,7 +137,7 @@ class Handshake(General):
     #TODO description
     CMD_ID = Frame.SetGeneral.HANDSHAKE
     CMD_TYPE = Frame.Type.CMD
-    _PACK_FORMAT = '<IHHH' #ip, poin_port, cmd_port, imu_port 
+    _PACK_FORMAT = '<4sHHH' #ip, poin_port, cmd_port, imu_port 
 
     def __init__(self, ip:ipaddress.IPv4Address, point_port:int, cmd_port:int, imu_port:int):
         #TODO description
@@ -149,7 +149,7 @@ class Handshake(General):
 
     @property
     def payload(self):
-        payload_body = struct.pack(self._PACK_FORMAT, int(self.ip), self.point_port, self.cmd_port, self.imu_port )
+        payload_body = struct.pack(self._PACK_FORMAT, self.ip.packed, self.point_port, self.cmd_port, self.imu_port )
         return super().payload(payload_body)
 
     @property
@@ -157,12 +157,8 @@ class Handshake(General):
         return self._ip
     
     @ip.setter
-    def ip(self, val:'ipaddress.IPv4Address|str'):
-        if type(val) is str:
-            val = ipaddress.IPv4Address(val)
-        elif type(val) is not ipaddress.IPv4Address:
-            raise TypeError
-        self._ip = val
+    def ip(self, value:'ipaddress.IPv4Address|str|int|bytes'):
+        self._ip = ipaddress.IPv4Address(value)
     
     @property
     def cmd_port(self)->int:
@@ -186,8 +182,8 @@ class Handshake(General):
 
     @staticmethod
     def from_payload(payload:bytes):
-        ip_int, point_port, cmd_port, imu_port = struct.unpack(Handshake._PACK_FORMAT, payload)
-        return Handshake(ipaddress.IPv4Address(ip_int), point_port, cmd_port, imu_port)
+        ip, point_port, cmd_port, imu_port = struct.unpack(Handshake._PACK_FORMAT, payload)
+        return Handshake(ip, point_port, cmd_port, imu_port)
 
 class HandshakeResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
@@ -482,7 +478,7 @@ class PushAbnormalStatusInformation(General):
 class ConfigureStaticDynamicIp(General):
     CMD_TYPE = Frame.Type.CMD
     CMD_ID = Frame.SetGeneral.CONFIGURE_STATIC_DYNAMIC_IP
-    _PACK_FORM = '<?III' #is_static, ip_addr, net_mask, gw
+    _PACK_FORM = '<?4s4s4s' #is_static, ip_addr, net_mask, gw
 
     def __init__(self, 
                     is_static:bool, 
@@ -510,36 +506,24 @@ class ConfigureStaticDynamicIp(General):
         return self._ip
 
     @ip.setter
-    def ip(self, value:'ipaddress.IPv4Address|int|str'):
-        if type(value) is int or type(value) is str:
-            value = ipaddress.IPv4Address(value)
-        elif type(value) is not ipaddress.IPv4Address:
-            raise TypeError
-        self._ip = value
+    def ip(self, value:'ipaddress.IPv4Address|int|str|bytes'):
+        self._ip = ipaddress.IPv4Address(value) 
     
     @property
     def mask(self)->ipaddress.IPv4Address:
         return self._mask
 
     @mask.setter
-    def mask(self, value:'ipaddress.IPv4Address|int|str'):
-        if type(value) is int or type(value) is str:
-            value = ipaddress.IPv4Address(value)
-        elif type(value) is not ipaddress.IPv4Address:
-            raise TypeError
-        self._mask = value
+    def mask(self, value:'ipaddress.IPv4Address|int|str|bytes'):
+        self._mask = ipaddress.IPv4Address(value)
 
     @property
     def gw(self)->ipaddress.IPv4Address:
         return self._gw
 
     @gw.setter
-    def gw(self, value:'ipaddress.IPv4Address|int|str'):
-        if type(value) is int or type(value) is str:
-            value = ipaddress.IPv4Address(value)
-        elif type(value) is not ipaddress.IPv4Address:
-            raise TypeError
-        self._gw = value
+    def gw(self, value:'ipaddress.IPv4Address|int|str|bytes'):
+        self._gw = ipaddress.IPv4Address(value) 
 
     @property
     def is_static(self)->bool:
@@ -553,7 +537,7 @@ class ConfigureStaticDynamicIp(General):
 
     @property
     def payload(self)->bytes:
-        payload_body = struct.pack(self._PACK_FORM, self.is_static, int(self.ip), int(self.mask), int(self.gw))
+        payload_body = struct.pack(self._PACK_FORM, self.is_static, self.ip.packed, self.mask.packed, self.gw.packed)
         return super().payload(payload_body)
 
     @staticmethod
@@ -595,14 +579,14 @@ class GetDeviceIpInformation(General):
 class GetDeviceIpInformationResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.GET_DEVICE_IP_INFORMATION
-    _PACK_FORMAT = '<??III' #is_error, is_static, ip, mask, gw
+    _PACK_FORMAT = '<??4s4s4s' #is_error, is_static, ip, mask, gw
 
     def __init__(self, 
                     is_error:bool, 
                     is_static:bool, 
-                    ip:'ipaddress.IPv4Address|str|int', 
-                    mask:'ipaddress.IPv4Address|str|int', 
-                    gw:'ipaddress.IPv4Address|str|int' ):
+                    ip:'ipaddress.IPv4Address|str|int|bytes', 
+                    mask:'ipaddress.IPv4Address|str|int|bytes', 
+                    gw:'ipaddress.IPv4Address|str|int|bytes' ):
         super().__init__()
         self.is_error = is_error
         self.is_static = is_static
@@ -625,40 +609,28 @@ class GetDeviceIpInformationResponse(General, IsErrorResponse):
         return self._ip
 
     @ip.setter
-    def ip(self, value:'ipaddress.IPv4Address|int|str'):
-        if type(value) is int or type(value) is str:
-            value = ipaddress.IPv4Address(value)
-        elif type(value) is not ipaddress.IPv4Address:
-            raise TypeError
-        self._ip = value
+    def ip(self, value:'ipaddress.IPv4Address|int|str|bytes'):
+        self._ip = ipaddress.IPv4Address(value)
 
     @property
     def mask(self)->ipaddress.IPv4Address:
         return self._mask
 
     @mask.setter
-    def mask(self, value:'ipaddress.IPv4Address|int|str'):
-        if type(value) is int or type(value) is str:
-            value = ipaddress.IPv4Address(value)
-        elif type(value) is not ipaddress.IPv4Address:
-            raise TypeError
-        self._mask = value
+    def mask(self, value:'ipaddress.IPv4Address|int|str|bytes'):
+        self._mask = ipaddress.IPv4Address(value)
 
     @property
     def gw(self)->ipaddress.IPv4Address:
         return self._gw
 
     @gw.setter
-    def gw(self, value:'ipaddress.IPv4Address|int|str'):
-        if type(value) is int or type(value) is str:
-            value = ipaddress.IPv4Address(value)
-        elif type(value) is not ipaddress.IPv4Address:
-            raise TypeError
-        self._gw = value
+    def gw(self, value:'ipaddress.IPv4Address|int|str|bytes'):
+        self._gw = ipaddress.IPv4Address(value)
 
     @property
     def payload(self)->bytes:
-        payload_body = struct.pack(self._PACK_FORMAT, self.is_error, self.is_static, int(self.ip), int(self.mask), int(self.gw))
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_error, self.is_static, self.ip.packed, self.mask.packed, self.gw.packed)
         return super().payload(payload_body)
 
     @staticmethod
