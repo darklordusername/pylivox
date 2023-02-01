@@ -54,7 +54,9 @@ class Lidar:
                 frame = FrameFrom(data)
                 logger.info(f'<< {addr} {frame}')
                 handler = self.HANDLERS[type(frame)]
-                handler(self, frame)
+                akn = handler(self, frame)
+                if akn: 
+                    self.send(akn)
             except socket.timeout:
                 pass
             except KeyError as e:
@@ -64,41 +66,43 @@ class Lidar:
             time.sleep(1)
 
     def send(self, frame:Frame):
+        logger.debug(f'>> {frame}')
         self.s.sendto(frame.frame, (str(self.master.ip), self.master.cmd_port))
 
     def onHandshake(self, handshake:general.Handshake):
         if not self.is_connected:
             self.master = handshake
-            akn = general.HandshakeResponse(False)
             self.heartbeat_time = time.time()
             self.is_connected = True
-            self.send(akn)
+            return general.HandshakeResponse(False)
+        else:
+            logger.error('No handshake expected')
 
     def onHeartbeat(self, heartbeat:general.Heartbeat):
         # self.heartbeat_time = time.time()   
-        akn = general.HeartbeatResponse(is_error=False, 
+        return general.HeartbeatResponse(is_error=False, 
                                         work_state=self.state, 
                                         feature_msg=0,
                                         ack_msg=0)
-        self.send(akn)
 
     def onDisconnect(self, disconnect:general.Disconnect):
-        pass
+        self.heartbeat_time = time.time() - 5
+        # return general.DisconnectResponse(False)
 
     def onQueryDeviceInformation(self, info:general.QueryDeviceInformation):
-        pass
+        return general.QueryDeviceInformationResponse(False, 1)
 
     def onReadLidarExtrinsicParameters(self, req:lidar.ReadLidarExtrinsicParameters):
-        pass
+        return lidar.ReadLidarExtrinsicParametersResponse(False, 0.0, 0.0, 0.0, 0, 0, 0)
 
     def onGetDeviceIpInformation(self, ip_info:general.GetDeviceIpInformation):
-        pass
+        return general.GetDeviceIpInformationResponse(False, True, '192.168.222.56', '255.255.255.0', '192.168.222.1')
 
     def onGetTurnOnOffFanState(self, req:lidar.GetTurnOnOffFanState):
-        pass
+        return lidar.GetTurnOnOffFanStateResponse(False, False)
 
     def onGetImuDataPushFrequency(self, req:lidar.GetImuDataPushFrequency):
-        pass
+        return lidar.GetImuDataPushFrequencyResponse(False, lidar.PushFrequency.FREQ_0HZ)
 
 
     HANDLERS = {
