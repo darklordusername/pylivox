@@ -11,7 +11,7 @@ log_err.setLevel(logging.ERROR)
 full_log_txt = logging.handlers.RotatingFileHandler('full_log.txt', maxBytes=1024*100, backupCount=1)
 full_log_txt.setLevel(logging.DEBUG)
 console = logging.StreamHandler()
-console.setLevel(logging.INFO)
+console.setLevel(logging.DEBUG)
 handlers = [log_txt, log_err, full_log_txt, console]
 list(map(lambda i: i.setFormatter(formatter), handlers))
 logger = logging.getLogger('')

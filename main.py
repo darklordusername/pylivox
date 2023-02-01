@@ -6,6 +6,7 @@ from binascii import a2b_hex
 #import proj
 import log
 from pylivox.control import general, lidar
+from pylivox.control.utils import FrameFrom
 
 logger = log.getLogger(__name__)
 logger.info('========== START ==========')
@@ -22,5 +23,26 @@ if __name__ == '__main__':
     address = ipaddress.IPv4Address('255.255.255.255')
     port = 55000
     while True:
+        logger.debug('broadcast...')
+        s.settimeout(0.1)
         s.sendto(broadcast_msg, (str(address), port) )
+        try:
+            data, addr = s.recvfrom(1024)
+            handshake = FrameFrom(data)
+            logger.debug(handshake)
+            if type(handshake) is not general.Handshake:
+                raise TypeError
+            # s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 0)
+            akn = general.HandshakeResponse(False).frame
+            s.sendto(akn, (str(handshake.ip), handshake.cmd_port))
+            logger.debug('>> akn')
+            while True:
+                s.settimeout(5)
+                data, addr = s.recvfrom(1024)
+                f = FrameFrom(data)
+                logger.debug(f)
+        except socket.timeout:
+            pass
+        except Exception as e:
+            logger.exception(e)
         time.sleep(1)
