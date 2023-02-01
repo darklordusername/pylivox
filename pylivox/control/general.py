@@ -46,7 +46,7 @@ class DeviceType(enum.Enum):
 
 
 class Broadcast():
-    _PACK_FORMAT = '<14BBx' #14 byte serial, ip_range, reserved
+    _PACK_FORMAT = '<14sBx' #14 byte serial, ip_range, reserved
     _PACK_LENGTH = struct.calcsize(_PACK_FORMAT)
 
     def __init__(self, serial:bytes, ip_range:int):
@@ -58,10 +58,14 @@ class Broadcast():
         return self._serial
 
     @serial.setter
-    def serial(self, value:bytes):
-        if type(value) is not bytes:
+    def serial(self, value:'str|bytes'):
+        if type(value) is str:
+            value = value.encode()
+        elif type(value) is not bytes:
             raise TypeError
-        self._serial = value
+        if len(value) > 14:
+            raise ValueError
+        self._serial = value + bytes(14-len(value))
 
     @property
     def ip_range(self)->int:
@@ -76,11 +80,11 @@ class Broadcast():
 
     @property
     def payload(self)->bytes:
-        return struct.pack(self._PACK_FORMAT, *self._serial, self.ip_range)
+        return struct.pack(self._PACK_FORMAT, self.serial, self.ip_range)
 
     @staticmethod
     def from_payload(payload:bytes)->'Broadcast':
-        *serial, ip_range = struct.unpack(Broadcast._PACK_FORMAT, payload)
+        serial, ip_range = struct.unpack(Broadcast._PACK_FORMAT, payload)
         serial = bytes(serial)
         return Broadcast(serial, ip_range)
 

@@ -12,15 +12,15 @@ logger.info('========== START ==========')
 
 if __name__ == '__main__':
     broadcast = general.BroadcastMsg(
-            general.Broadcast( a2b_hex('1122334455667788990011223344'), 0), 
+            general.Broadcast( 'test', 0), 
             general.DeviceType.Mid40)
-    broadcast_msg = broadcast.payload
+    broadcast_msg = broadcast.frame
     seq = 0
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     s.bind((str(ipaddress.IPv4Address("0.0.0.0")), 65000)) 
     address = ipaddress.IPv4Address('255.255.255.255')
-    port = 65000
+    port = 55000
     while True:
         s.sendto(broadcast_msg, (str(address), port) )
         time.sleep(1)
