@@ -558,6 +558,19 @@ class RebootDeviceResponse(General, IsErrorResponseOnly):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.REBOOT_DEVICE
 
+    def __init__(self, is_error:bool=False, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
+        super().__init__(is_error, device_type, device_version)
+        if( (device_type == DeviceType.HUB and device_version >= (8,7,0,0)) or
+            (device_type == DeviceType.MID_40 and device_version >= (3,7,0,0)) or 
+            (device_type == DeviceType.MID_70 and device_version >= (10,3,0,0)) or 
+            (device_type == DeviceType.HORIZON and device_version >= (6,4,0,0)) or 
+            (device_type == DeviceType.TELE_15 and device_version >= (7,3,0,0)) or
+            (device_type == DeviceType.AVIA and device_version >= (11,6,0,0))
+            ):
+            pass
+        else:
+            raise Exception('Command not supported by this device')
+
 class ConfigurationParameter:
 
     class Key(enum.Enum):

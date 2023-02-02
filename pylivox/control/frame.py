@@ -208,8 +208,8 @@ class IsErrorResponse(Cmd):
 
 class IsErrorResponseOnly(IsErrorResponse): 
 
-    def __init__(self, is_error:bool=False):
-        super().__init__()
+    def __init__(self, is_error:bool=False, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
+        super().__init__(device_type, device_version)
         self.is_error = is_error
 
     @property
@@ -218,7 +218,7 @@ class IsErrorResponseOnly(IsErrorResponse):
         return super().cmd_payload(payload_body)
 
     @classmethod
-    def from_payload(cls, payload:bytes, *args, **kwargs):
+    def from_payload(cls, payload:bytes, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
         is_error, = struct.unpack(cls._PACK_FORMAT, payload)
-        return cls(is_error)
+        return cls(is_error, device_type, device_version)
 
