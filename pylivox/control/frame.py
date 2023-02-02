@@ -130,7 +130,7 @@ class Frame(abc.ABC):
         return crc32(self.header + self.header_crc + self.payload).to_bytes(4, 'little')
 
     @abc.abstractproperty
-    def payload(self):
+    def cmd_payload(self):
         raise NotImplementedError
 
     @abc.abstractstaticmethod
@@ -163,10 +163,17 @@ class Cmd(Frame):
     CMD_SET = None
     CMD_ID = None
 
-    def payload(self, payload_body:bytes):
+    def cmd_payload(self, payload_body:bytes):
         format = f'<BB{len(payload_body)}B' #CMD_SET, CMD_ID, BODY
         return struct.pack(format, self.CMD_SET.value, self.CMD_ID.value, *payload_body )
 
+    @property
+    def payload(self):
+        return self.cmd_payload(b'')
+
+    @classmethod
+    def from_payload(cls, *args, **kwargs):
+        return cls()
 
 class IsErrorResponse(Cmd):
     CMD_TYPE = Frame.Type.AKN
@@ -192,10 +199,10 @@ class IsErrorResponseOnly(IsErrorResponse):
     @property
     def payload(self)->bytes:
         payload_body = struct.pack(self._PACK_FORMAT, self.is_error)
-        return super().payload(payload_body)
+        return super().cmd_payload(payload_body)
 
     @classmethod
-    def from_payload(cls, payload:bytes):
+    def from_payload(cls, payload:bytes, *args, **kwargs):
         is_error, = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(is_error)
 
