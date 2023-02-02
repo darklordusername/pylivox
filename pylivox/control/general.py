@@ -137,7 +137,8 @@ class Handshake(General):
     #TODO description
     CMD_ID = Frame.SetGeneral.HANDSHAKE
     CMD_TYPE = Frame.Type.CMD
-    _PACK_FORMAT = '<4sHHH' #ip, poin_port, cmd_port, imu_port 
+    _PACK_FORMAT = '<4sHHH' #ip, point_port, cmd_port, imu_port #Supported Devices:Horizon/06.04.0000, Tele-15/07.03.0000+ 
+    _PACK_FORMAT_2 = '<4sHH' #ip, point_port, cmd_port 
 
     def __init__(self, ip:ipaddress.IPv4Address, point_port:int, cmd_port:int, imu_port:int):
         #TODO description
@@ -185,6 +186,7 @@ class Handshake(General):
         ip, point_port, cmd_port, imu_port = struct.unpack(Handshake._PACK_FORMAT, payload)
         return Handshake(ip, point_port, cmd_port, imu_port)
 
+
 class HandshakeResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.HANDSHAKE
@@ -219,7 +221,7 @@ class QueryDeviceInformation(General):
 class QueryDeviceInformationResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.QUERY_DEVICE_INFORMATION
-    _PACK_FORMAT = '<?I' #is_error, firmware version
+    _PACK_FORMAT = '<?4B' #is_error, firmware version
 
     def __init__(self, is_error:bool, firmware_version:int):
         super().__init__()
@@ -227,13 +229,24 @@ class QueryDeviceInformationResponse(General, IsErrorResponse):
         self.firmware_version = firmware_version
 
     @property
+    def firmware_version(self)->'tuple(int,int,int,int)':
+        return self._firmware_version
+
+    @firmware_version.setter
+    def firmware_version(self, value:'tuple|list(int,int,int,int)'):
+        assert type(value) is tuple or type(value) is list
+        assert len(value) == 4
+        assert not [v for v in value if type(v) is not int or v < 0 or v > 255]
+        self._firmware_version = value
+
+    @property
     def payload(self):
-        payload_body = struct.pack(self._PACK_FORMAT, self.is_error, self.firmware_version)
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_error, *self.firmware_version)
         return super().payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes):
-        is_error, firmware_version = struct.unpack(QueryDeviceInformationResponse._PACK_FORMAT, payload)
+        is_error, *firmware_version = struct.unpack(QueryDeviceInformationResponse._PACK_FORMAT, payload)
         return QueryDeviceInformationResponse(is_error, firmware_version)
 
 class Heartbeat(General):
