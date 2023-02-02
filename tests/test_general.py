@@ -88,7 +88,9 @@ def cmd_payload(payload:str):
                                                                                                                                                                                                                                 #param_list
     (g.WriteConfigurationParameters        , {'param_list': [g.ConfigurationParameter(g.ConfigurationParameter.Key.HIGH_SENSITIVITY_FUNCTION, True),
                                                              g.ConfigurationParameter(g.ConfigurationParameter.Key.SWITCH_REPETITIVE_NON_REPETITIVE_SCANNING_PATTERN, True),
-                                                             g.ConfigurationParameter(g.ConfigurationParameter.Key.SLOT_ID_CONFIGURATION, 1)]}
+                                                             g.ConfigurationParameter(g.ConfigurationParameter.Key.SLOT_ID_CONFIGURATION, 1)],
+                                            'device_type': DeviceType.AVIA,
+                                             'device_version': (11,11,11,11) }
                                                                                                                                   , cmd_payload('aa     01                1e00    00        0000  0000      00       0b         0100050001 0200050001 0300050001                   00000000')),
                                                                                                                                                                                                                                 #is_error, error_key, error_code
     (g.WriteConfigurationParametersResponse, {'is_error': False, 

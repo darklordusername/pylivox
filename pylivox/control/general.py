@@ -124,7 +124,7 @@ class BroadcastMsg(General):
         broadcast_bytes = payload[:Broadcast._PACK_LENGTH]
         broadcast = Broadcast.from_payload(broadcast_bytes)
         dev_type, = struct.unpack(cls._PACK_FORMAT, payload[Broadcast._PACK_LENGTH:])
-        return cls(broadcast, dev_type)
+        return cls(broadcast, dev_type, device_version)
 
 class Handshake(General):
     #TODO description
@@ -177,7 +177,7 @@ class Handshake(General):
         else:
             ip, point_port, cmd_port = struct.unpack('<4sHH', payload)
             imu_port = None
-        return cls(ip, point_port, cmd_port, imu_port)
+        return cls(ip, point_port, cmd_port, imu_port, device_type, device_version)
 
 
 class HandshakeResponse(General, IsErrorResponseOnly):
@@ -192,7 +192,7 @@ class QueryDeviceInformationResponse(General, IsErrorResponse):
     CMD_ID = Frame.SetGeneral.QUERY_DEVICE_INFORMATION
     _PACK_FORMAT = '<?4B' #is_error, firmware version
 
-    def __init__(self, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version, is_error:bool=False, ):
+    def __init__(self, is_error:bool=False, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version,  ):
         super().__init__(device_type, device_version)
         self.is_error = is_error
 
@@ -204,7 +204,8 @@ class QueryDeviceInformationResponse(General, IsErrorResponse):
     @classmethod
     def from_payload(cls, payload:bytes, device_type, device_version):
         is_error, *firmware_version = struct.unpack(cls._PACK_FORMAT, payload)
-        return cls(is_error, firmware_version)
+        assert tuple(firmware_version) == device_version
+        return cls(is_error, device_type, firmware_version)
 
 class Heartbeat(General):
     CMD_TYPE = Frame.Type.CMD
@@ -268,7 +269,7 @@ class HeartbeatResponse(General, IsErrorResponse):
     @classmethod
     def from_payload(cls, payload: bytes, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
         is_error, work_state, feature, ack_msg = struct.unpack(cls._PACK_FORMAT, payload)
-        return cls(work_state, feature, ack_msg, is_error)
+        return cls(work_state, feature, ack_msg, is_error, device_type, device_version)
 
 class StartStopSampling(General):
     CMD_TYPE = Frame.Type.CMD
@@ -301,7 +302,7 @@ class StartStopSampling(General):
     @classmethod
     def from_payload(cls, payload:bytes, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
         is_start,  = struct.unpack(cls._PACK_FORMAT, payload)
-        return cls(is_start)
+        return cls(is_start, device_type, device_version)
 
 class StartStopSamplingResponse(General, IsErrorResponseOnly):
     CMD_TYPE = Frame.Type.AKN
@@ -334,7 +335,7 @@ class ChangeCoordinateSystem(General):
     @classmethod
     def from_payload(cls, payload:bytes, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
         is_spherical, = struct.unpack(cls._PACK_FORMAT, payload)
-        return cls(is_spherical)
+        return cls(is_spherical, device_type, device_version)
 
 class ChangeCoordinateSystemResponse(General, IsErrorResponseOnly):
     CMD_TYPE = Frame.Type.AKN
@@ -375,7 +376,7 @@ class PushAbnormalStatusInformation(General):
     @classmethod
     def from_payload(cls, payload:bytes, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
         status_code, = struct.unpack(cls._PACK_FORMAT, payload)
-        return cls(status_code)
+        return cls(status_code, device_type, device_version)
 
 class ConfigureStaticDynamicIp(General):
     CMD_TYPE = Frame.Type.CMD
@@ -463,7 +464,7 @@ class ConfigureStaticDynamicIp(General):
              is_static, ip = struct.unpack('<?4s', payload)
              mask = None
              gw = None
-        return cls(is_static, ip, mask, gw)
+        return cls(is_static, ip, mask, gw, device_type, device_version)
 
 class ConfigureStaticDynamicIpResponse(General, IsErrorResponseOnly):
     CMD_TYPE = Frame.Type.AKN
@@ -513,7 +514,7 @@ class GetDeviceIpInformationResponse(ConfigureStaticDynamicIp, IsErrorResponse):
             is_error, is_static, ip = struct.unpack('<??4s', payload)
             mask = None
             gw = None
-        return cls(is_static, ip, mask, gw, is_error)
+        return cls(is_static, ip, mask, gw, is_error, device_type, device_version)
 
 class RebootDevice(General):
     CMD_TYPE = Frame.Type.CMD
@@ -647,6 +648,15 @@ class WriteConfigurationParameters(General):
     CMD_ID = Frame.SetGeneral.WRITE_CONFIGURATION_PARAMETERS
 
     def __init__(self, param_list:'list(ConfigurationParameter)|bytes', device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
+        if ( (device_type == DeviceType.HUB and device_version >= (8,9,0,0)) or 
+             (device_type == DeviceType.HORIZON and device_version >= (6,11,0,0)) or 
+             (device_type == DeviceType.TELE_15 and device_version >= (7,9,0,0)) or 
+             (device_type == DeviceType.MID_70 and device_version >= (10,3,0,0)) or 
+             (device_type == DeviceType.AVIA and device_version >= (11,6,0,0)) 
+            ):
+            pass
+        else:
+            raise Exception('Command not supported by this device')
         super().__init__(device_type, device_version)
         self.param_list = param_list
 
@@ -668,7 +678,7 @@ class WriteConfigurationParameters(General):
 
     @classmethod
     def from_payload(cls, payload:bytes, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        return cls(payload)
+        return cls(payload, device_type, device_version)
 
 class WriteConfigurationParametersResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
@@ -719,7 +729,7 @@ class WriteConfigurationParametersResponse(General, IsErrorResponse):
     @classmethod
     def from_payload(cls, payload:bytes, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
         is_error, error_key, error_code = struct.unpack(cls._PACK_FORMAT, payload)
-        return cls(error_key, error_code, is_error)
+        return cls(error_key, error_code, is_error, device_type, device_version)
 
 class ReadConfigurationParameters(General):
     CMD_TYPE = Frame.Type.CMD
@@ -760,7 +770,7 @@ class ReadConfigurationParameters(General):
         keys_quantity = payload[0]
         keys_bytes = [payload[2*i+1:2*i+3] for i in range(keys_quantity)]
         keys = [ ConfigurationParameter.Key(int.from_bytes(key,'little')) for key in keys_bytes]
-        return cls(keys_quantity, keys)
+        return cls(keys_quantity, keys, device_type, device_version)
 
 class ReadConfigurationParametersResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
@@ -811,4 +821,4 @@ class ReadConfigurationParametersResponse(General, IsErrorResponse):
     def from_payload(cls, payload:bytes, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
         is_error, error_key, error_code = struct.unpack('<?HB', payload[:4])
         param_list = ConfigurationParameter.from_payload_list(payload[4:])
-        return cls(error_key, error_code, param_list, is_error)
+        return cls(error_key, error_code, param_list, is_error, device_type, device_version)
