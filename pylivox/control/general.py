@@ -692,6 +692,15 @@ class WriteConfigurationParametersResponse(General, IsErrorResponse):
                     device_type:DeviceType=Device_type, 
                     device_version:'tuple(int,int,int,int)'=Device_version
                     ):
+        if ( (device_type == DeviceType.HUB and device_version >= (8,9,0,0)) or 
+             (device_type == DeviceType.HORIZON and device_version >= (6,11,0,0)) or 
+             (device_type == DeviceType.TELE_15 and device_version >= (7,9,0,0)) or 
+             (device_type == DeviceType.MID_70 and device_version >= (10,3,0,0)) or 
+             (device_type == DeviceType.AVIA and device_version >= (11,6,0,0)) 
+            ):
+            pass
+        else:
+            raise Exception('Command not supported by this device')
         super().__init__(device_type, device_version)
         self.is_error = is_error
         self.error_key = error_key
@@ -736,6 +745,15 @@ class ReadConfigurationParameters(General):
     CMD_ID = Frame.SetGeneral.READ_CONFIGURATION_PARAMETERS
 
     def __init__(self, keys_quantity:int, keys:'list(ConfigurationParameter.Key)', device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
+        if ( (device_type == DeviceType.HUB and device_version >= (8,9,0,0)) or 
+             (device_type == DeviceType.HORIZON and device_version >= (6,11,0,0)) or 
+             (device_type == DeviceType.TELE_15 and device_version >= (7,9,0,0)) or 
+             (device_type == DeviceType.MID_70 and device_version >= (10,3,0,0)) or 
+             (device_type == DeviceType.AVIA and device_version >= (11,6,0,0)) 
+            ):
+            pass
+        else:
+            raise Exception('Command not supported by this device')
         super().__init__(device_type, device_version)
         self.keys_quantity = keys_quantity
         self.keys = keys
@@ -784,6 +802,15 @@ class ReadConfigurationParametersResponse(General, IsErrorResponse):
                 device_type:DeviceType=Device_type, 
                 device_version:'tuple(int,int,int,int)'=Device_version
                 ):
+        if ( (device_type == DeviceType.HUB and device_version >= (8,9,0,0)) or 
+             (device_type == DeviceType.HORIZON and device_version >= (6,11,0,0)) or 
+             (device_type == DeviceType.TELE_15 and device_version >= (7,9,0,0)) or 
+             (device_type == DeviceType.MID_70 and device_version >= (10,3,0,0)) or 
+             (device_type == DeviceType.AVIA and device_version >= (11,6,0,0)) 
+            ):
+            pass
+        else:
+            raise Exception('Command not supported by this device')
         super().__init__(device_type, device_version)
         self.is_error = is_error
         self.error_key = error_key
