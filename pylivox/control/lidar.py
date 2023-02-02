@@ -34,7 +34,7 @@ class SetMode(Lidar):
     _PACK_FORMAT = '<B'#lidar_mode
 
     def __init__(self, power_mode:'PowerMode|int', device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.power_mode = power_mode
 
     @property
@@ -70,7 +70,7 @@ class SetModeResponse(Lidar):
         Switching = 2
 
     def __init__(self, result:'Result|int', device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.result = result
 
     @property
@@ -101,7 +101,7 @@ class WriteLidarExtrinsicParameters(Lidar):
     _PACK_FORMAT = '<fffIII' #roll, pitch, yaw, x, y, z
 
     def __init__(self, roll:float, pitch:float, yaw:float, x:int, y:int, z:int, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.roll = roll
         self.pitch = pitch
         self.yaw = yaw
@@ -142,7 +142,7 @@ class ReadLidarExtrinsicParametersResponse(Lidar, IsErrorResponse):
                 device_type:DeviceType=Device_type, 
                 device_version:'tuple(int,int,int,int)'=Device_version 
                 ):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.is_error = is_error
         self.roll = roll
         self.pitch = pitch
@@ -167,7 +167,7 @@ class TurnOnOffRainFogSuppression(Lidar):
     _PACK_FORMAT = '<?' # is_enable
 
     def __init__(self, is_enable:bool, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.is_enable = is_enable
 
     @property
@@ -189,7 +189,7 @@ class SetTurnOnOffFan(Lidar):
     _PACK_FORMAT = '<?' #is_enable
 
     def __init__(self, is_enable:bool, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.is_enable = is_enable
 
     @property
@@ -216,7 +216,7 @@ class GetTurnOnOffFanStateResponse( Lidar, IsErrorResponse):
     _PACK_FORMAT = '<??' #is_error, state
 
     def __init__(self, state:bool, is_error:bool=False, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version ):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.is_error = is_error
         self.state = state
 
@@ -236,7 +236,7 @@ class SetLidarReturnMode(Lidar):
     _PACK_FORMAT = '<B' # return_mode
 
     def __init__(self, return_mode:'ReturnMode|int', device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.return_mode = return_mode
 
     @property
@@ -273,7 +273,7 @@ class GetLidarReturnModeResponse(Lidar, IsErrorResponse):
     _PACK_FORMAT = '<?B' #is_error, return_mode
 
     def __init__(self, return_mode:'ReturnMode|int', is_error:bool=False, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.result = is_error
         self.return_mode = return_mode
 
@@ -305,7 +305,7 @@ class SetImuDataPushFrequency(Lidar):
     _PACK_FORMAT = '<B' # frequency
 
     def __init__(self, frequency:'PushFrequency|int', device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.frequency = frequency
 
     @property
@@ -342,7 +342,7 @@ class GetImuDataPushFrequencyResponse( Lidar, IsErrorResponse):
     _PACK_FORMAT = '<?B' #is_error, frequency
 
     def __init__(self, frequency:'PushFrequency|int', is_error:bool=False, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.is_error = is_error
         self.frequency = frequency
 
@@ -374,7 +374,7 @@ class UpdateUtcSynchronizationTime(Lidar):
     _PACK_FORMAT = '<BBBBI' #year, month, day, hour, microseconds
 
     def __init__(self, year:int, month:int, day:int, hour:int, microseconds:int, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        super().__init__()
+        super().__init__(device_type, device_version)
         datetime(year, month, day, hour)
         self.year = year
         self.month = month

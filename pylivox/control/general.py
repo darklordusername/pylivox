@@ -87,10 +87,10 @@ class BroadcastMsg(General):
     CMD_ID = Frame.SetGeneral.BROADCAST_MESSAGE
     _PACK_FORMAT = f'<B2x' #{broadcast}, dev_type, reserved
 
-    def __init__(self, broadcast:Broadcast, dev_type:'DeviceType|int' ): 
-        super().__init__()
+    def __init__(self, broadcast:Broadcast, device_type:'DeviceType|int'=Device_type, device_version:'tuple(int,int,int,int)'=Device_version): 
+        super().__init__(device_type, device_version)
         self.broadcast = broadcast
-        self.dev_type = dev_type
+        self.dev_type = device_type
 
     @property
     def broadcast(self)->Broadcast:
@@ -142,13 +142,11 @@ class Handshake(General):
                 device_version:'tuple(int,int,int,int)'=Device_version
                 ):
         
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.ip = ip
         self.point_port = point_port
         self.cmd_port = cmd_port
         self.imu_port = imu_port
-        self.device_type = device_type
-        self.device_version = device_version
 
     @property
     def payload(self):
@@ -195,24 +193,12 @@ class QueryDeviceInformationResponse(General, IsErrorResponse):
     _PACK_FORMAT = '<?4B' #is_error, firmware version
 
     def __init__(self, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version, is_error:bool=False, ):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.is_error = is_error
-        self.firmware_version = device_version
-
-    @property
-    def firmware_version(self)->'tuple(int,int,int,int)':
-        return self._firmware_version
-
-    @firmware_version.setter
-    def firmware_version(self, value:'tuple|list(int,int,int,int)'):
-        assert type(value) is tuple or type(value) is list
-        assert len(value) == 4
-        assert not [v for v in value if type(v) is not int or v < 0 or v > 255]
-        self._firmware_version = value
 
     @property
     def payload(self):
-        payload_body = struct.pack(self._PACK_FORMAT, self.is_error, *self.firmware_version)
+        payload_body = struct.pack(self._PACK_FORMAT, self.is_error, *self.device_version)
         return super().cmd_payload(payload_body)
 
     @staticmethod
@@ -237,9 +223,9 @@ class HeartbeatResponse(General, IsErrorResponse):
                     device_type:DeviceType=Device_type,
                     device_version:'tuple(int,int,int,int)'=Device_version
                     ):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.is_error = is_error
-        self.device_model = device_type
+        # self.device_model = device_type
         self.work_state = work_state
         self.feature_msg = feature_msg
         self.ack_msg = ack_msg
@@ -250,20 +236,7 @@ class HeartbeatResponse(General, IsErrorResponse):
 
     @work_state.setter
     def work_state(self, value:'WorkState.Lidar|WorkState.Hub|int'):
-        """Depend on DEVICE_MODE 
-
-        Args:
-            value (WorkState.Lidar|WorkState.Hub|int): _description_
-        """
-        if type(value) is int:
-            DeviceType(self.device_model)
-            if self.device_model == DeviceType.HUB:
-                value = WorkState.Hub(value)
-            else:
-                value = WorkState.Lidar(value)
-        elif type(value) is not WorkState.Lidar and type(value) is not WorkState.Hub:
-            raise TypeError
-        self._work_state = value
+        self._work_state = WorkState.Hub(value) if self.device_type is DeviceType.HUB else WorkState.Lidar(value)
 
     @property
     def feature_msg(self)->int:
@@ -307,7 +280,7 @@ class StartStopSampling(General):
                     device_type:DeviceType=Device_type, 
                     device_version:'tuple(int,int,int,int)'=Device_version
                 ):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.is_start = is_start
     
     @property
@@ -340,7 +313,7 @@ class ChangeCoordinateSystem(General):
     _PACK_FORMAT = '<?' #Is_Spherical_Coordinate?
 
     def __init__(self, is_spherical:bool, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.is_spherical = is_spherical
 
     @property
@@ -381,7 +354,7 @@ class PushAbnormalStatusInformation(General):
     _PACK_FORMAT = '<I' #status_code
 
     def __init__(self, status_code:int, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.status_code = status_code
 
     @property
@@ -417,7 +390,7 @@ class ConfigureStaticDynamicIp(General):
                     device_type:DeviceType=Device_type, 
                     device_version:'tuple(int,int,int,int)'=Device_version
         ):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.is_static = is_static
         self.ip = ip
         self.mask = mask
@@ -499,7 +472,7 @@ class GetDeviceIpInformationResponse(General, IsErrorResponse):
                     device_type:DeviceType=Device_type, 
                     device_version:'tuple(int,int,int,int)'=Device_version
                     ): 
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.is_error = is_error
         self.is_static = is_static
         self.ip = ip
@@ -556,7 +529,7 @@ class RebootDevice(General):
     _PACK_FORMAT = '<H' #timeout
 
     def __init__(self, timeout:int, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.timeout = timeout
 
     @property
@@ -659,7 +632,7 @@ class WriteConfigurationParameters(General):
     CMD_ID = Frame.SetGeneral.WRITE_CONFIGURATION_PARAMETERS
 
     def __init__(self, param_list:'list(ConfigurationParameter)|bytes', device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.param_list = param_list
 
     @property
@@ -694,7 +667,7 @@ class WriteConfigurationParametersResponse(General, IsErrorResponse):
                     device_type:DeviceType=Device_type, 
                     device_version:'tuple(int,int,int,int)'=Device_version
                     ):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.is_error = is_error
         self.error_key = error_key
         self.error_code = error_code
@@ -738,7 +711,7 @@ class ReadConfigurationParameters(General):
     CMD_ID = Frame.SetGeneral.READ_CONFIGURATION_PARAMETERS
 
     def __init__(self, keys_quantity:int, keys:'list(ConfigurationParameter.Key)', device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.keys_quantity = keys_quantity
         self.keys = keys
 
@@ -786,7 +759,7 @@ class ReadConfigurationParametersResponse(General, IsErrorResponse):
                 device_type:DeviceType=Device_type, 
                 device_version:'tuple(int,int,int,int)'=Device_version
                 ):
-        super().__init__()
+        super().__init__(device_type, device_version)
         self.is_error = is_error
         self.error_key = error_key
         self.error_code = error_code

@@ -93,21 +93,37 @@ class Frame(abc.ABC):
     FRAME_CRC_LENGTH = 4
     FRAME_MAX_LENGTH = 1400
 
-    def __init__(self, seq=0):
+    def __init__(self, 
+                device_type:DeviceType=Device_type, 
+                device_version:'tuple(int,int,int,int)'=Device_version,
+                seq=0
+                ):
         self.seq = seq
+        self.device_type = device_type
+        self.device_version = device_version
 
-    @classmethod
-    def _check_cmd_id(cls, cmd_id:int, exception:bool=True)->bool:
-        error = cmd_id != cls.CMD_ID
-        if error and exception:
-            raise ValueError(f'Bad cmd id: {cmd_id}. Expected {cls.CMD_ID}. Got {cmd_id}')
-        else:
-            return error
+    @property
+    def device_version(self)->'tuple(int,int,int,int)':
+        return self._device_version
+
+    @device_version.setter
+    def device_version(self, value:'tuple|list(int,int,int,int)'):
+        assert type(value) is tuple or type(value) is list
+        assert len(value) == 4
+        assert not [v for v in value if type(v) is not int or v < 0 or v > 255]
+        self._device_version = value
+    
+    @property
+    def device_type(self)->DeviceType:
+        return self._device_type
+
+    @device_type.setter
+    def device_type(self, value:'DeviceType|int'):
+        self._device_type = DeviceType(value)
 
     @property
     def frame(self):
         return self.header + self.header_crc + self.payload + self.frame_crc 
-
 
     @property
     def header(self):
