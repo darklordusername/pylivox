@@ -192,7 +192,7 @@ class HandshakeResponse(General, IsErrorResponse):
     CMD_ID = Frame.SetGeneral.HANDSHAKE
     _PACK_FORMAT = '<?' ##response code
 
-    def __init__(self, is_error:bool):
+    def __init__(self, is_error:bool=False):
         super().__init__()
         self.is_error = is_error
 
@@ -223,7 +223,7 @@ class QueryDeviceInformationResponse(General, IsErrorResponse):
     CMD_ID = Frame.SetGeneral.QUERY_DEVICE_INFORMATION
     _PACK_FORMAT = '<?4B' #is_error, firmware version
 
-    def __init__(self, is_error:bool, firmware_version:int):
+    def __init__(self, firmware_version:int, is_error:bool=False, ):
         super().__init__()
         self.is_error = is_error
         self.firmware_version = firmware_version
@@ -247,7 +247,7 @@ class QueryDeviceInformationResponse(General, IsErrorResponse):
     @staticmethod
     def from_payload(payload:bytes):
         is_error, *firmware_version = struct.unpack(QueryDeviceInformationResponse._PACK_FORMAT, payload)
-        return QueryDeviceInformationResponse(is_error, firmware_version)
+        return QueryDeviceInformationResponse(firmware_version, is_error)
 
 class Heartbeat(General):
     CMD_TYPE = Frame.Type.CMD
@@ -268,10 +268,11 @@ class HeartbeatResponse(General, IsErrorResponse):
     DEVICE_MODE = DEVICE_MODE
 
     def __init__(self, 
-                    is_error:bool, 
                     work_state:'WorkState.Lidar|WorkState.Hub|int', 
                     feature_msg:int, 
-                    ack_msg:int):
+                    ack_msg:int,
+                    is_error:bool=False,
+                    ):
         super().__init__()
         self.is_error = is_error
         self.work_state = work_state
@@ -330,7 +331,7 @@ class HeartbeatResponse(General, IsErrorResponse):
     @staticmethod
     def from_payload(payload: bytes):
         is_error, work_state, feature, ack_msg = struct.unpack(HeartbeatResponse._PACK_FORMAT, payload)
-        return HeartbeatResponse(is_error, work_state, feature, ack_msg)
+        return HeartbeatResponse(work_state, feature, ack_msg, is_error)
 
 class StartStopSampling(General):
     CMD_TYPE = Frame.Type.CMD
@@ -414,7 +415,7 @@ class ChangeCoordinateSystemResponse(General, IsErrorResponse):
     CMD_ID = Frame.SetGeneral.CHANGE_COORDINATE_SYSTEM
     _PACK_FORMAT = '<?' #is_error
 
-    def __init__(self, is_error:bool):
+    def __init__(self, is_error:bool=False):
         super().__init__()
         self.is_error = is_error
 
@@ -445,7 +446,7 @@ class DisconnectResponse(General, IsErrorResponse):
     CMD_ID = Frame.SetGeneral.DISCONNECT
     _PACK_FORMAT = '<?' #is_error
 
-    def __init__(self, is_error:bool):
+    def __init__(self, is_error:bool=False):
         super().__init__()
         self.is_error = is_error
 
@@ -563,7 +564,7 @@ class ConfigureStaticDynamicIpResponse(General, IsErrorResponse):
     CMD_ID = Frame.SetGeneral.CONFIGURE_STATIC_DYNAMIC_IP
     _PACK_FORMAT = '<?' # is_error
 
-    def __init__(self, is_error:bool):
+    def __init__(self, is_error:bool=False):
         super().__init__()
         self.is_error = is_error
 
@@ -595,11 +596,12 @@ class GetDeviceIpInformationResponse(General, IsErrorResponse):
     _PACK_FORMAT = '<??4s4s4s' #is_error, is_static, ip, mask, gw
 
     def __init__(self, 
-                    is_error:bool, 
                     is_static:bool, 
                     ip:'ipaddress.IPv4Address|str|int|bytes', 
                     mask:'ipaddress.IPv4Address|str|int|bytes', 
-                    gw:'ipaddress.IPv4Address|str|int|bytes' ):
+                    gw:'ipaddress.IPv4Address|str|int|bytes',
+                    is_error:bool=False,
+                    ): 
         super().__init__()
         self.is_error = is_error
         self.is_static = is_static
@@ -649,7 +651,7 @@ class GetDeviceIpInformationResponse(General, IsErrorResponse):
     @staticmethod
     def from_payload(payload):
         is_error, is_static, ip, mask, gw = struct.unpack(GetDeviceIpInformationResponse._PACK_FORMAT, payload)
-        return GetDeviceIpInformationResponse(is_error, is_static, ip, mask, gw)
+        return GetDeviceIpInformationResponse(is_static, ip, mask, gw, is_error)
 
 class RebootDevice(General):
     CMD_TYPE = Frame.Type.CMD
@@ -685,7 +687,7 @@ class RebootDeviceResponse(General, IsErrorResponse):
     CMD_ID = Frame.SetGeneral.REBOOT_DEVICE
     _PACK_FORMAT = '<?' #is_error
 
-    def __init__(self, is_error:bool):
+    def __init__(self, is_error:bool=False):
         super().__init__()
         self.is_error = is_error
 
@@ -804,9 +806,10 @@ class WriteConfigurationParametersResponse(General, IsErrorResponse):
     _PACK_FORMAT = '<?HB' #is_error, error_key, error_code
 
     def __init__(self,  
-                    is_error:bool, 
                     error_key:'ConfigurationParameter.Key|int', 
-                    error_code:'ConfigurationParameter.ErrorCode|int'):
+                    error_code:'ConfigurationParameter.ErrorCode|int',
+                    is_error:bool=False, 
+                    ):
         super().__init__()
         self.is_error = is_error
         self.error_key = error_key
@@ -844,7 +847,7 @@ class WriteConfigurationParametersResponse(General, IsErrorResponse):
     @staticmethod
     def from_payload(payload:bytes):
         is_error, error_key, error_code = struct.unpack(WriteConfigurationParametersResponse._PACK_FORMAT, payload)
-        return WriteConfigurationParametersResponse(is_error, error_key, error_code)
+        return WriteConfigurationParametersResponse(error_key, error_code, is_error)
 
 class ReadConfigurationParameters(General):
     CMD_TYPE = Frame.Type.CMD
@@ -892,10 +895,11 @@ class ReadConfigurationParametersResponse(General, IsErrorResponse):
     CMD_ID = Frame.SetGeneral.READ_CONFIGURATION_PARAMETERS
 
     def __init__(self, 
-                is_error:bool, 
                 error_key:'ConfigurationParameter.Key|int', 
                 error_code:'ConfigurationParameter.ErrorCode|int', 
-                param_list:'list(ConfigurationParameter)'):
+                param_list:'list(ConfigurationParameter)',
+                is_error:bool=False, 
+                ):
         super().__init__()
         self.is_error = is_error
         self.error_key = error_key
@@ -933,4 +937,4 @@ class ReadConfigurationParametersResponse(General, IsErrorResponse):
     def from_payload(payload:bytes):
         is_error, error_key, error_code = struct.unpack('<?HB', payload[:4])
         param_list = ConfigurationParameter.from_payload_list(payload[4:])
-        return ReadConfigurationParametersResponse(is_error, error_key, error_code, param_list)
+        return ReadConfigurationParametersResponse(error_key, error_code, param_list, is_error)

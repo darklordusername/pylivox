@@ -139,7 +139,15 @@ class ReadLidarExtrinsicParametersResponse(Lidar, IsErrorResponse):
     CMD_ID = Frame.SetLidar.READ_LIDAR_EXTRINSIC_PARAMETERS
     _PACK_FORMAT = '<?fffIII' #is_error, roll, pitch, yaw, x, y, z
 
-    def __init__(self, is_error:bool, roll:float, pitch:float, yaw:float, x:int, y:int, z:int):
+    def __init__(self, 
+                roll:float, 
+                pitch:float, 
+                yaw:float, 
+                x:int, 
+                y:int, 
+                z:int,
+                is_error:bool=False, 
+                ):
         super().__init__()
         self.is_error = is_error
         self.roll = roll
@@ -157,7 +165,7 @@ class ReadLidarExtrinsicParametersResponse(Lidar, IsErrorResponse):
     @staticmethod
     def from_payload(payload:bytes):
         is_error, roll, pitch, yaw, x, y, z = struct.unpack(ReadLidarExtrinsicParametersResponse._PACK_FORMAT, payload)
-        return ReadLidarExtrinsicParametersResponse(is_error, roll, pitch, yaw, x, y, z)
+        return ReadLidarExtrinsicParametersResponse(roll, pitch, yaw, x, y, z, is_error)
 
 class TurnOnOffRainFogSuppression(Lidar):
     CMD_TYPE = Frame.Type.CMD
@@ -221,7 +229,7 @@ class GetTurnOnOffFanStateResponse( Lidar, IsErrorResponse):
     CMD_ID = Frame.SetLidar.GET_TURN_ON_OFF_FAN_STATE
     _PACK_FORMAT = '<??' #is_error, state
 
-    def __init__(self, is_error:bool, state:bool):
+    def __init__(self, state:bool, is_error:bool=False, ):
         super().__init__()
         self.is_error = is_error
         self.state = state
@@ -234,7 +242,7 @@ class GetTurnOnOffFanStateResponse( Lidar, IsErrorResponse):
     @staticmethod
     def from_payload(payload:bytes):
         is_error, state = struct.unpack(GetTurnOnOffFanStateResponse._PACK_FORMAT, payload)
-        return GetTurnOnOffFanStateResponse(is_error, state)
+        return GetTurnOnOffFanStateResponse(state, is_error)
 
 class SetLidarReturnMode(Lidar):
     CMD_TYPE = Frame.Type.CMD
@@ -286,7 +294,7 @@ class GetLidarReturnModeResponse(Lidar, IsErrorResponse):
     CMD_ID = Frame.SetLidar.GET_LIDAR_RETURN_MODE
     _PACK_FORMAT = '<?B' #is_error, return_mode
 
-    def __init__(self, is_error:bool, return_mode:'ReturnMode|int'):
+    def __init__(self, return_mode:'ReturnMode|int', is_error:bool=False,):
         super().__init__()
         self.result = is_error
         self.return_mode = return_mode
@@ -311,7 +319,7 @@ class GetLidarReturnModeResponse(Lidar, IsErrorResponse):
     @staticmethod
     def from_payload(payload:bytes):
         is_error, return_mode = struct.unpack(GetLidarReturnModeResponse._PACK_FORMAT, payload)
-        return GetLidarReturnModeResponse(is_error, return_mode)
+        return GetLidarReturnModeResponse(return_mode, is_error)
     
 class SetImuDataPushFrequency(Lidar):
     CMD_TYPE = Frame.Type.CMD
@@ -363,7 +371,7 @@ class GetImuDataPushFrequencyResponse( Lidar, IsErrorResponse):
     CMD_ID = Frame.SetLidar.GET_IMU_DATA_PUSH_FREQUENCY
     _PACK_FORMAT = '<?B' #is_error, frequency
 
-    def __init__(self, is_error:bool, frequency:'PushFrequency|int'):
+    def __init__(self, frequency:'PushFrequency|int', is_error:bool=False,):
         super().__init__()
         self.is_error = is_error
         self.frequency = frequency
@@ -388,7 +396,7 @@ class GetImuDataPushFrequencyResponse( Lidar, IsErrorResponse):
     @staticmethod
     def from_payload(payload:bytes):
         is_error, frequency = struct.unpack(GetImuDataPushFrequencyResponse._PACK_FORMAT, payload)
-        return GetImuDataPushFrequencyResponse(is_error, frequency)
+        return GetImuDataPushFrequencyResponse(frequency, is_error)
 
 class UpdateUtcSynchronizationTime(Lidar):
     CMD_TYPE = Frame.Type.CMD

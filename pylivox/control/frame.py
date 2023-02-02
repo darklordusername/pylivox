@@ -171,7 +171,7 @@ class IsErrorResponse(Cmd):
 
 class IsErrorResponseOnly(IsErrorResponse): 
 
-    def __init__(self, is_error:bool):
+    def __init__(self, is_error:bool=False):
         super().__init__()
         self.is_error = is_error
 
