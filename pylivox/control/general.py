@@ -473,70 +473,47 @@ class GetDeviceIpInformation(General):
     CMD_TYPE = Frame.Type.CMD
     CMD_ID = Frame.SetGeneral.GET_DEVICE_IP_INFORMATION
 
-class GetDeviceIpInformationResponse(General, IsErrorResponse):
+class GetDeviceIpInformationResponse(ConfigureStaticDynamicIp, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.GET_DEVICE_IP_INFORMATION
-    _PACK_FORMAT = '<??4s4s4s' #is_error, is_static, ip, mask, gw
 
     def __init__(self, 
                     is_static:bool, 
                     ip:'ipaddress.IPv4Address|str|int|bytes', 
-                    mask:'ipaddress.IPv4Address|str|int|bytes', 
-                    gw:'ipaddress.IPv4Address|str|int|bytes',
+                    mask:'ipaddress.IPv4Address|str|int|bytes'=None, 
+                    gw:'ipaddress.IPv4Address|str|int|bytes'=None,
                     is_error:bool=False,
                     device_type:DeviceType=Device_type, 
                     device_version:'tuple(int,int,int,int)'=Device_version
                     ): 
-        super().__init__(device_type, device_version)
+        super().__init__(is_static, ip, mask, gw, device_type, device_version)
         self.is_error = is_error
-        self.is_static = is_static
-        self.ip = ip
-        self.mask = mask
-        self.gw = gw
-
-    @property
-    def is_static(self)->bool:
-        return self._is_static
-
-    @is_static.setter
-    def is_static(self, value:bool):
-        if type(value) is not bool:
-            raise TypeError
-        self._is_static = value
-
-    @property
-    def ip(self)->ipaddress.IPv4Address:
-        return self._ip
-
-    @ip.setter
-    def ip(self, value:'ipaddress.IPv4Address|int|str|bytes'):
-        self._ip = ipaddress.IPv4Address(value)
-
-    @property
-    def mask(self)->ipaddress.IPv4Address:
-        return self._mask
-
-    @mask.setter
-    def mask(self, value:'ipaddress.IPv4Address|int|str|bytes'):
-        self._mask = ipaddress.IPv4Address(value)
-
-    @property
-    def gw(self)->ipaddress.IPv4Address:
-        return self._gw
-
-    @gw.setter
-    def gw(self, value:'ipaddress.IPv4Address|int|str|bytes'):
-        self._gw = ipaddress.IPv4Address(value)
 
     @property
     def payload(self)->bytes:
-        payload_body = struct.pack(self._PACK_FORMAT, self.is_error, self.is_static, self.ip.packed, self.mask.packed, self.gw.packed)
+        if( (self.device_type == DeviceType.HORIZON and self.device_version >= (6,4,0,0)) or
+            (self.device_type == DeviceType.TELE_15 and self.device_version >= (7,3,0,0)) or
+            (self.device_type == DeviceType.MID_70 and self.device_version >= (10,3,0,0)) or
+            (self.device_type == DeviceType.AVIA and self.device_version >= (11,6,0,0))
+        ): 
+            payload_body = struct.pack('<??4s4s4s', self.is_error, self.is_static, self.ip.packed, self.mask.packed, self.gw.packed)
+        else:
+            payload_body = struct.pack('<??4s', self._is_error, self.is_static, self.ip.packed)
         return super().cmd_payload(payload_body)
 
-    @staticmethod
-    def from_payload(payload, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        is_error, is_static, ip, mask, gw = struct.unpack(GetDeviceIpInformationResponse._PACK_FORMAT, payload)
-        return GetDeviceIpInformationResponse(is_static, ip, mask, gw, is_error)
+    @classmethod
+    def from_payload(cls, payload, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
+        if( (device_type == DeviceType.HORIZON and device_version >= (6,4,0,0)) or
+            (device_type == DeviceType.TELE_15 and device_version >= (7,3,0,0)) or
+            (device_type == DeviceType.MID_70 and device_version >= (10,3,0,0)) or
+            (device_type == DeviceType.AVIA and device_version >= (11,6,0,0))
+        ): 
+            is_error, is_static, ip, mask, gw = struct.unpack('<??4s4s4s', payload)
+        else:
+            is_error, is_static, ip = struct.unpack('<??4s', payload)
+            mask = None
+            gw = None
+        return cls(is_static, ip, mask, gw, is_error)
 
 class RebootDevice(General):
     CMD_TYPE = Frame.Type.CMD
