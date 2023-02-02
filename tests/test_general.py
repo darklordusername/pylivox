@@ -95,17 +95,25 @@ def cmd_payload(payload:str):
                                                                                                                                                                                                                                 #is_error, error_key, error_code
     (g.WriteConfigurationParametersResponse, {'is_error': False, 
                                                 'error_key' :g.ConfigurationParameter.Key.HIGH_SENSITIVITY_FUNCTION, 
-                                                'error_code': g.ConfigurationParameter.ErrorCode.NO_ERROR}                        , cmd_payload('aa     01                1300    01        0000  0000      00       0b         00         0100       00                           00000000')),
+                                                'error_code': g.ConfigurationParameter.ErrorCode.NO_ERROR,
+                                                'device_type': DeviceType.AVIA,
+                                                'device_version': (11,11,11,11)}
+                                                                                                                                  , cmd_payload('aa     01                1300    01        0000  0000      00       0b         00         0100       00                           00000000')),
                                                                                                                                                                                                                                 #keys_quantity, keys                                                
     (g.ReadConfigurationParameters         , {'keys_quantity': 2, 
                                               'keys': [g.ConfigurationParameter.Key.HIGH_SENSITIVITY_FUNCTION,
-                                                       g.ConfigurationParameter.Key.SWITCH_REPETITIVE_NON_REPETITIVE_SCANNING_PATTERN]} 
+                                                       g.ConfigurationParameter.Key.SWITCH_REPETITIVE_NON_REPETITIVE_SCANNING_PATTERN],
+                                            'device_type': DeviceType.AVIA,
+                                             'device_version': (11,11,11,11)
+                                            } 
                                                                                                                                   , cmd_payload('aa     01                1400    00        0000  0000      00       0c         02              0100 0200                          00000000')),
                                                                                                                                                                                                                                 #is_error, error_key, error_code, param_list                                                                                     
     (g.ReadConfigurationParametersResponse, {'is_error': False, 
                                             'error_key' :g.ConfigurationParameter.Key.HIGH_SENSITIVITY_FUNCTION, 
                                             'error_code': g.ConfigurationParameter.ErrorCode.NO_ERROR,
-                                            'param_list': [g.ConfigurationParameter( g.ConfigurationParameter.Key.HIGH_SENSITIVITY_FUNCTION, True )]
+                                            'param_list': [g.ConfigurationParameter( g.ConfigurationParameter.Key.HIGH_SENSITIVITY_FUNCTION, True )],
+                                            'device_type': DeviceType.AVIA,
+                                             'device_version': (11,11,11,11)
                                             }                                                                                     , cmd_payload('aa     01                1800    01        0000  0000      00       0c          00         0100       00          0100050001       00000000')),
 
                                                                                                                                                                                                                                 #power_mode
