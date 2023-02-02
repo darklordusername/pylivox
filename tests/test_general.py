@@ -6,8 +6,7 @@ import pytest
 #proj
 from pylivox.control import general as g
 from pylivox.control import lidar 
-from pylivox.control import frame as f 
-from pylivox.control.frame import Frame
+from pylivox.control.frame import Frame, DeviceType
 from pylivox.control.utils import FrameFrom
 
 def cmd_payload(payload:str):
@@ -26,12 +25,12 @@ def cmd_payload(payload:str):
     'T                                     , kwargs                                                                                 , frame',
     [                 
     (g.BroadcastMsg                        , {'broadcast' : g.Broadcast(serial='12345678901234', ip_range=0) ,                                                                                                                              #serial,                     ip_range, reserved, device_type, reserved           crc
-                                            'device_type'  : g.DeviceType.MID_40}                                                     , cmd_payload('aa     01                2200    02        0000  0000      00       00                   3132333435363738393031323334 00        00        01           0000               00000000')),
+                                            'device_type'  : DeviceType.MID_40}                                                     , cmd_payload('aa     01                2200    02        0000  0000      00       00                   3132333435363738393031323334 00        00        01           0000               00000000')),
     (g.Handshake                           , {'ip'        : '192.168.1.1',                 
                                             'point_port': 0x1122,                 
                                             'cmd_port'  : 0x3344,                                                                               #start, protocol version, length, cmd type, seq , head crc, cmd set, cmd id,    user ip, data port, cmd pro, imu port,             crc
                                             'imu_port'  : 0x5566, 
-                                            'device_type' :f.Device_type.TELE_15, 
+                                            'device_type' :DeviceType.TELE_15, 
                                             'device_version' :(8,8,8,8)}                                                          , cmd_payload('aa     01                1900    00        0000  0000      00       01         c0a80101 2211       4433     6655                  00000000')),
     (g.Handshake                           , {'ip'      : '192.168.1.1',                 
                                             'point_port': 0x1122,                 
@@ -62,7 +61,12 @@ def cmd_payload(payload:str):
                                                                                                                                                                                                                                 #status code
     (g.PushAbnormalStatusInformation       , {'status_code': 0x11223344}                                                          , cmd_payload('aa     01                1300    02        0000  0000      00       07         44332211                                           00000000')),
                                                                                                                                                                                                                                 #is_static, ip,      net_mask, gw
-    (g.ConfigureStaticDynamicIp            , {'is_static': True,  'ip':'192.168.1.1', 'mask': '255.255.255.0', 'gw':'192.168.1.1'}, cmd_payload('aa     01                1c00    00        0000  0000      00       08         01          c0a80101 ffffff00  c0a80101            00000000')),
+    (g.ConfigureStaticDynamicIp            , {'is_static': True,  'ip':'192.168.1.1',
+                                             'mask': '255.255.255.0', 'gw':'192.168.1.1',
+                                             'device_type': DeviceType.AVIA,
+                                             'device_version': (11,11,11,11)}                                                     , cmd_payload('aa     01                1c00    00        0000  0000      00       08         01          c0a80101 ffffff00  c0a80101            00000000')),
+                                                                                                                                                                                                                                #is_static  ip                                        
+    (g.ConfigureStaticDynamicIp            , {'is_static': True,  'ip':'192.168.1.1', }                                           , cmd_payload('aa     01                1400    00        0000  0000      00       08         01          c0a80101                               00000000')),
                                                                                                                                                                                                                                 #is_error
     (g.ConfigureStaticDynamicIpResponse    , {'is_error': False}                                                                  , cmd_payload('aa     01                1000    01        0000  0000      00       08         00                                                 00000000')),
                                                                                                                                                                                                                                 #

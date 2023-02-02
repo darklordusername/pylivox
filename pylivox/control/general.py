@@ -380,13 +380,12 @@ class PushAbnormalStatusInformation(General):
 class ConfigureStaticDynamicIp(General):
     CMD_TYPE = Frame.Type.CMD
     CMD_ID = Frame.SetGeneral.CONFIGURE_STATIC_DYNAMIC_IP
-    _PACK_FORM = '<?4s4s4s' #is_static, ip_addr, net_mask, gw
 
     def __init__(self, 
                     is_static:bool, 
                     ip:'ipaddress.IPv4Address|int|str', 
-                    mask:'ipaddress.IPv4Address|int|str',
-                    gw:'ipaddress.IPv4Address|int|str',
+                    mask:'ipaddress.IPv4Address|int|str'=None,
+                    gw:'ipaddress.IPv4Address|int|str'=None,
                     device_type:DeviceType=Device_type, 
                     device_version:'tuple(int,int,int,int)'=Device_version
         ):
@@ -415,20 +414,20 @@ class ConfigureStaticDynamicIp(General):
         self._ip = ipaddress.IPv4Address(value) 
     
     @property
-    def mask(self)->ipaddress.IPv4Address:
+    def mask(self)->'ipaddress.IPv4Address|None':
         return self._mask
 
     @mask.setter
-    def mask(self, value:'ipaddress.IPv4Address|int|str|bytes'):
-        self._mask = ipaddress.IPv4Address(value)
+    def mask(self, value:'ipaddress.IPv4Address|int|str|bytes|None'):
+        self._mask = ipaddress.IPv4Address(value) if value else None
 
     @property
-    def gw(self)->ipaddress.IPv4Address:
+    def gw(self)->'ipaddress.IPv4Address|None':
         return self._gw
 
     @gw.setter
-    def gw(self, value:'ipaddress.IPv4Address|int|str|bytes'):
-        self._gw = ipaddress.IPv4Address(value) 
+    def gw(self, value:'ipaddress.IPv4Address|int|str|bytes|None'):
+        self._gw = ipaddress.IPv4Address(value) if value else None
 
     @property
     def is_static(self)->bool:
@@ -442,12 +441,28 @@ class ConfigureStaticDynamicIp(General):
 
     @property
     def payload(self)->bytes:
-        payload_body = struct.pack(self._PACK_FORM, self.is_static, self.ip.packed, self.mask.packed, self.gw.packed)
+        if( (self.device_type == DeviceType.HORIZON and self.device_version >= (6,4,0,0)) or
+            (self.device_type == DeviceType.TELE_15 and self.device_version >= (7,3,0,0)) or
+            (self.device_type == DeviceType.MID_70 and self.device_version >= (10,3,0,0)) or
+            (self.device_type == DeviceType.AVIA and self.device_version >= (11,6,0,0))
+        ): 
+            payload_body = struct.pack('<?4s4s4s', self.is_static, self.ip.packed, self.mask.packed, self.gw.packed)
+        else:
+            payload_body = struct.pack('<?4s', self.is_static, self.ip.packed)
         return super().cmd_payload(payload_body)
 
     @staticmethod
     def from_payload(payload:bytes, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        is_static, ip, mask, gw = struct.unpack(ConfigureStaticDynamicIp._PACK_FORM, payload)
+        if( (device_type == DeviceType.HORIZON and device_version >= (6,4,0,0)) or
+            (device_type == DeviceType.TELE_15 and device_version >= (7,3,0,0)) or
+            (device_type == DeviceType.MID_70 and device_version >= (10,3,0,0)) or
+            (device_type == DeviceType.AVIA and device_version >= (11,6,0,0))
+        ): 
+            is_static, ip, mask, gw = struct.unpack('<?4s4s4s', payload)
+        else:
+             is_static, ip = struct.unpack('<?4s', payload)
+             mask = None
+             gw = None
         return ConfigureStaticDynamicIp(is_static, ip, mask, gw)
 
 class ConfigureStaticDynamicIpResponse(General, IsErrorResponseOnly):
