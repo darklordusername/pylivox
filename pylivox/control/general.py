@@ -39,10 +39,13 @@ class WorkState():
 #         <br>**Hub is Reserved** |
 
 class DeviceType(enum.Enum):
-    Hub     = 0     
-    Mid40   = 1 
-    Tele15  = 2
-    Horizon = 3
+    HUB      = 0     
+    MID_40   = 1 
+    TELE_15  = 2
+    HORIZON  = 3
+    MID_70   = 6
+    AVIA     = 7
+
 
 
 class Broadcast():
@@ -223,7 +226,7 @@ class QueryDeviceInformationResponse(General, IsErrorResponse):
     CMD_ID = Frame.SetGeneral.QUERY_DEVICE_INFORMATION
     _PACK_FORMAT = '<?4B' #is_error, firmware version
 
-    def __init__(self, firmware_version:int, is_error:bool=False, ):
+    def __init__(self, firmware_version:'tuple(int,int,int,int)', is_error:bool=False, ):
         super().__init__()
         self.is_error = is_error
         self.firmware_version = firmware_version
