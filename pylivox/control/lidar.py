@@ -167,6 +167,8 @@ class TurnOnOffRainFogSuppression(Lidar):
     _PACK_FORMAT = '<?' # is_enable
 
     def __init__(self, is_enable:bool, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
+        if device_type != DeviceType.MID_40:
+            raise Exception('Command not supported by this device')
         super().__init__(device_type, device_version)
         self.is_enable = is_enable
 
@@ -182,6 +184,11 @@ class TurnOnOffRainFogSuppression(Lidar):
 
 class TurnOnOffRainFogSuppressionResponse(Lidar, IsErrorResponseOnly):
     CMD_ID = Frame.SetLidar.TURN_ON_OFF_RAIN_FOG_SUPPRESSION
+
+    def __init__(self, is_error:bool=False, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
+        if device_type != DeviceType.MID_40:
+            raise Exception('Command not supported by this device')
+        super().__init__(is_error, device_type, device_version)
 
 class SetTurnOnOffFan(Lidar):
     CMD_TYPE = Frame.Type.CMD
