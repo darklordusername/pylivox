@@ -3,6 +3,7 @@ import threading
 import time
 import socket
 import ipaddress
+import enum
 #import proj
 import log
 from pylivox.control import general, lidar
@@ -13,23 +14,28 @@ logger = log.getLogger(__name__)
 
 
 class Lidar:
-
-    def __init__(self, serial:'str|bytes'):
+       
+# 
+    def __init__(self, serial:'str|bytes', model:general.DeviceType, fwv:'tuple(int,int,int,int)'):
+        self.serial = serial
+        self.model = model
+        self.broadcast = general.BroadcastMsg(general.Broadcast(serial, 0x31), model)
+        self.device_info = general.QueryDeviceInformationResponse(fwv)
         self.master:general.Handshake = None
         self.heartbeat_time = time.time() - 5
         self.is_connected = False
         self.state:general.WorkState.Lidar = general.WorkState.Lidar.Standby
-        self.serial = serial
         self.seq = 0
         self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.s.bind((str(ipaddress.IPv4Address("0.0.0.0")), 65000)) 
-        self._broadcast()
+        self._run_broadcast()
         self._rx()
 
-    def _broadcast(self):
+    def _run_broadcast(self):
         def t():
             while True:
+                msg = self.broadcast.frame
                 try:
                     time.sleep(1)
                     elapsed = time.time() - self.heartbeat_time
@@ -37,10 +43,7 @@ class Lidar:
                         continue
                     self.is_connected = False
                     logger.debug('broadcast...')
-                    broadcast = general.BroadcastMsg(
-                            general.Broadcast( self.serial, 0), 
-                            general.DeviceType.Mid40).frame
-                    self.s.sendto(broadcast, ('255.255.255.255', 55000) )
+                    self.s.sendto(msg, ('255.255.255.255', 55000) )
                 except Exception as e:
                     logger.exception(e)
         self._broadcast_thread = threading.Thread(target=t, name='broadcast', daemon=True)
@@ -60,7 +63,7 @@ class Lidar:
             except socket.timeout:
                 pass
             except KeyError as e:
-                logger.warning(f'Unknown frame {data} cmd_set:{data[-6]} cmd_id:{data[-5]}')
+                logger.warning(f'Unknown frame {data.hex()} cmd_set:{data[-6]} cmd_id:{data[-5]}')
             except Exception as e:
                 logger.exception(e)
             time.sleep(1)
@@ -74,14 +77,13 @@ class Lidar:
             self.master = handshake
             self.heartbeat_time = time.time()
             self.is_connected = True
-            return general.HandshakeResponse(False)
+            return general.HandshakeResponse()
         else:
             logger.error('No handshake expected')
 
     def onHeartbeat(self, heartbeat:general.Heartbeat):
         # self.heartbeat_time = time.time()   
-        return general.HeartbeatResponse(is_error=False, 
-                                        work_state=self.state, 
+        return general.HeartbeatResponse(work_state=self.state, 
                                         feature_msg=0,
                                         ack_msg=0)
 
@@ -90,19 +92,19 @@ class Lidar:
         # return general.DisconnectResponse(False)
 
     def onQueryDeviceInformation(self, info:general.QueryDeviceInformation):
-        return general.QueryDeviceInformationResponse(False, 1)
+        return self.device_info
 
     def onReadLidarExtrinsicParameters(self, req:lidar.ReadLidarExtrinsicParameters):
-        return lidar.ReadLidarExtrinsicParametersResponse(False, 0.0, 0.0, 0.0, 0, 0, 0)
+        return lidar.ReadLidarExtrinsicParametersResponse(0.0, 0.0, 0.0, 0, 0, 0)
 
     def onGetDeviceIpInformation(self, ip_info:general.GetDeviceIpInformation):
-        return general.GetDeviceIpInformationResponse(False, True, '192.168.222.56', '255.255.255.0', '192.168.222.1')
+        return general.GetDeviceIpInformationResponse(True, '192.168.222.56', '255.255.255.0', '192.168.222.1')
 
     def onGetTurnOnOffFanState(self, req:lidar.GetTurnOnOffFanState):
-        return lidar.GetTurnOnOffFanStateResponse(False, False)
+        return lidar.GetTurnOnOffFanStateResponse(False)
 
     def onGetImuDataPushFrequency(self, req:lidar.GetImuDataPushFrequency):
-        return lidar.GetImuDataPushFrequencyResponse(False, lidar.PushFrequency.FREQ_0HZ)
+        return lidar.GetImuDataPushFrequencyResponse(lidar.PushFrequency.FREQ_0HZ)
 
 
     HANDLERS = {
