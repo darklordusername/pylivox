@@ -6,6 +6,7 @@ import pytest
 #proj
 from pylivox.control import general as g
 from pylivox.control import lidar 
+from pylivox.control import frame as f 
 from pylivox.control.frame import Frame
 from pylivox.control.utils import FrameFrom
 
@@ -29,7 +30,13 @@ def cmd_payload(payload:str):
     (g.Handshake                           , {'ip'        : '192.168.1.1',                 
                                             'point_port': 0x1122,                 
                                             'cmd_port'  : 0x3344,                                                                               #start, protocol version, length, cmd type, seq , head crc, cmd set, cmd id,    user ip, data port, cmd pro, imu port,             crc
-                                            'imu_port'  : 0x5566,}                                                                , cmd_payload('aa     01                1900    00        0000  0000      00       01         c0a80101 2211       4433     6655                  00000000')),
+                                            'imu_port'  : 0x5566, 
+                                            'device_type' :f.Device_type.TELE_15, 
+                                            'device_version' :(8,8,8,8)}                                                          , cmd_payload('aa     01                1900    00        0000  0000      00       01         c0a80101 2211       4433     6655                  00000000')),
+    (g.Handshake                           , {'ip'      : '192.168.1.1',                 
+                                            'point_port': 0x1122,                 
+                                            'cmd_port'  : 0x3344,                                                                                                                                                              #user ip, data port, cmd pro, imu port,             crc
+                                            'imu_port'  : 0x5566,}                                                                , cmd_payload('aa     01                1700    00        0000  0000      00       01         c0a80101 2211       4433                           00000000')),
                                                                                                                                                                                                                                 #is_error
     (g.HandshakeResponse                   , {'is_error': False}                                                                  , cmd_payload('aa     01                1000    01        0000  0000      00       01         00                                                 00000000')),
                                                                                                                                                                                                                                 #
@@ -142,5 +149,10 @@ def cmd_payload(payload:str):
 def test_command_to_frame_and_from_frame(T, kwargs, frame:bytes):
     t = T(**kwargs)
     assert t.frame == frame
-    t2 = FrameFrom(frame)
+    frame_kwargs = {}
+    if 'device_type' in kwargs:
+        frame_kwargs['device_type'] = kwargs['device_type']
+    if 'device_version' in kwargs:
+        frame_kwargs['device_version'] = kwargs['device_version']
+    t2 = FrameFrom(frame, **frame_kwargs)
     assert type(t2) is type(t)

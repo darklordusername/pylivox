@@ -2,7 +2,7 @@
 #std
 import struct
 #proj
-from pylivox.control.frame import Frame
+from pylivox.control.frame import Frame, DeviceType, Device_type, Device_version
 import pylivox.control.general as general
 import pylivox.control.hub as hub
 import pylivox.control.lidar as lidar
@@ -60,7 +60,10 @@ TypeDict = {
     (Frame.Set.LIDAR.value, Frame.Type.AKN.value, Frame.SetLidar.UPDATE_UTC_SYNCHRONIZATION_TIME      .value) : lidar.UpdateUtcSynchronizationTimeResponse,
 }    
 
-def FrameFrom(frame:bytes)->Frame:
+def FrameFrom(frame:bytes, 
+                device_type:DeviceType=Device_type, 
+                device_version:'tuple(int,int,int,int)'=Device_version
+            )->Frame:
     #TODO description
     #parse frame parts
     header = frame[0:7]
@@ -77,4 +80,4 @@ def FrameFrom(frame:bytes)->Frame:
     assert start == Frame.START
     assert version == Frame.VERSION
     T = TypeDict[cmd_set, cmd_type, cmd_id]
-    return T.from_payload(frame_payload)
+    return T.from_payload(frame_payload, device_type, device_version)

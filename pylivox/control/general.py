@@ -7,9 +7,8 @@ import struct
 import ipaddress
 
 #project 
-from pylivox.control.frame import Frame, Cmd, IsErrorResponse
+from pylivox.control.frame import Frame, Cmd, IsErrorResponse, DeviceType, Device_type, Device_version
 
-DEVICE_MODE = 'LIDAR' #'HUB'
 
 class General(Cmd):
     CMD_SET = Frame.Set.GENERAL
@@ -37,15 +36,6 @@ class WorkState():
 #         <br>0x01: Turn On 
 #         <br>Bit1 ~ Bit7: Reserved 
 #         <br>**Hub is Reserved** |
-
-class DeviceType(enum.Enum):
-    HUB      = 0     
-    MID_40   = 1 
-    TELE_15  = 2
-    HORIZON  = 3
-    MID_70   = 6
-    AVIA     = 7
-
 
 
 class Broadcast():
@@ -140,20 +130,34 @@ class Handshake(General):
     #TODO description
     CMD_ID = Frame.SetGeneral.HANDSHAKE
     CMD_TYPE = Frame.Type.CMD
-    _PACK_FORMAT = '<4sHHH' #ip, point_port, cmd_port, imu_port #Supported Devices:Horizon/06.04.0000, Tele-15/07.03.0000+ 
-    _PACK_FORMAT_2 = '<4sHH' #ip, point_port, cmd_port 
+        # _PACK_FORMAT = '<4sHH' #ip, point_port, cmd_port 
 
-    def __init__(self, ip:ipaddress.IPv4Address, point_port:int, cmd_port:int, imu_port:int):
-        #TODO description
+
+    def __init__(self, 
+                ip:ipaddress.IPv4Address,
+                point_port:int, 
+                cmd_port:int, 
+                imu_port:int=None, 
+                device_type:DeviceType=Device_type,
+                device_version:'tuple(int,int,int,int)'=Device_version
+                ):
+        
         super().__init__()
         self.ip = ip
         self.point_port = point_port
         self.cmd_port = cmd_port
         self.imu_port = imu_port
+        self.device_type = device_type
+        self.device_version = device_version
 
     @property
     def payload(self):
-        payload_body = struct.pack(self._PACK_FORMAT, self.ip.packed, self.point_port, self.cmd_port, self.imu_port )
+        if ( (self.device_type == DeviceType.HORIZON and self.device_version >= (6,4,0,0)) or
+             (self.device_type == DeviceType.TELE_15 and self.device_version >= (3,7,0,0))
+        ):
+            payload_body = struct.pack('<4sHHH', self.ip.packed, self.point_port, self.cmd_port, self.imu_port )
+        else:
+            payload_body = struct.pack('<4sHH', self.ip.packed, self.point_port, self.cmd_port )
         return super().payload(payload_body)
 
     @property
@@ -163,30 +167,18 @@ class Handshake(General):
     @ip.setter
     def ip(self, value:'ipaddress.IPv4Address|str|int|bytes'):
         self._ip = ipaddress.IPv4Address(value)
-    
-    @property
-    def cmd_port(self)->int:
-        return self._cmd_port
-
-    @cmd_port.setter
-    def cmd_port(self, val:int):
-        if val < 0 or val > 2**16:
-            raise ValueError
-        self._cmd_port = val
-
-    @property 
-    def imu_port(self)->int:
-        return self._imu_port
-
-    @imu_port.setter
-    def imu_port(self, val:int):
-        if val < 0 or val > 2**16:
-            raise ValueError
-        self._imu_port = val
 
     @staticmethod
-    def from_payload(payload:bytes):
-        ip, point_port, cmd_port, imu_port = struct.unpack(Handshake._PACK_FORMAT, payload)
+    def from_payload(payload:bytes, 
+                    device_type:DeviceType=Device_type, 
+                    device_version:'tuple(int,int,int,int)'=Device_version):
+        if ( (device_type == DeviceType.HORIZON and device_version >= (6,4,0,0)) or
+             (device_type == DeviceType.TELE_15 and device_version >= (3,7,0,0))
+        ):
+            ip, point_port, cmd_port, imu_port = struct.unpack('<4sHHH', payload)
+        else:
+            ip, point_port, cmd_port = struct.unpack('<4sHH', payload)
+            imu_port = None
         return Handshake(ip, point_port, cmd_port, imu_port)
 
 
@@ -268,16 +260,17 @@ class HeartbeatResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.HEARTBEAT
     _PACK_FORMAT = '<?BBI' #is_error, work_state, feature, ack_msg
-    DEVICE_MODE = DEVICE_MODE
 
     def __init__(self, 
                     work_state:'WorkState.Lidar|WorkState.Hub|int', 
                     feature_msg:int, 
                     ack_msg:int,
                     is_error:bool=False,
+                    device_model=Device_type
                     ):
         super().__init__()
         self.is_error = is_error
+        self.device_model = device_model
         self.work_state = work_state
         self.feature_msg = feature_msg
         self.ack_msg = ack_msg
@@ -294,12 +287,11 @@ class HeartbeatResponse(General, IsErrorResponse):
             value (WorkState.Lidar|WorkState.Hub|int): _description_
         """
         if type(value) is int:
-            if self.DEVICE_MODE == 'LIDAR':
-                value = WorkState.Lidar(value)
-            elif self.DEVICE_MODE == 'HUB':
+            DeviceType(self.device_model)
+            if self.device_model == DeviceType.HUB:
                 value = WorkState.Hub(value)
             else:
-                raise ValueError
+                value = WorkState.Lidar(value)
         elif type(value) is not WorkState.Lidar and type(value) is not WorkState.Hub:
             raise TypeError
         self._work_state = value

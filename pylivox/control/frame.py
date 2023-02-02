@@ -14,6 +14,20 @@ crc16 = crcmod.mkCrcFun(0x11021, rev=True, initCrc=0x4C49)
 
 logger = logging.getLogger(__name__)
 
+
+
+class DeviceType(enum.Enum):
+    HUB      = 0     
+    MID_40   = 1 
+    TELE_15  = 2
+    HORIZON  = 3
+    MID_70   = 6
+    AVIA     = 7
+
+#Global config for current device
+Device_type = DeviceType.MID_40
+Device_version = (1,1,1,1)
+
 class Frame(abc.ABC):
     """Low level wrapper for command,response """
 
