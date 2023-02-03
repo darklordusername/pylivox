@@ -61,8 +61,8 @@ TypeDict = {
 }    
 
 def FrameFrom(frame:bytes, 
-                device_type:DeviceType=Device_type, 
-                device_version:'tuple(int,int,int,int)'=Device_version
+                device_type:DeviceType=None, 
+                device_version:'tuple(int,int,int,int)'=None
             )->Frame:
     #TODO description
     #parse frame parts
