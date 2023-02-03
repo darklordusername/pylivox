@@ -185,6 +185,11 @@ class TurnOnOffRainFogSuppression(Lidar):
 class TurnOnOffRainFogSuppressionResponse(Lidar, IsErrorResponseOnly):
     CMD_ID = Frame.SetLidar.TURN_ON_OFF_RAIN_FOG_SUPPRESSION
 
+@support_only([
+    (DeviceType.MID_40   , (3,7,0,0)),
+    (DeviceType.HORIZON  , (6,4,0,0)),
+    (DeviceType.TELE_15  , (7,3,0,0)),
+])
 class SetTurnOnOffFan(Lidar):
     CMD_TYPE = Frame.Type.CMD
     CMD_ID = Frame.SetLidar.SET_TURN_ON_OFF_FAN 
@@ -204,14 +209,28 @@ class SetTurnOnOffFan(Lidar):
         is_enable, = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(is_enable, device_type, device_version)
 
+@support_only([
+    (DeviceType.MID_40   , (3,7,0,0)),
+    (DeviceType.HORIZON  , (6,4,0,0)),
+    (DeviceType.TELE_15  , (7,3,0,0)),
+])
 class SetTurnOnOffFanResponse( Lidar, IsErrorResponseOnly):
     CMD_ID = Frame.SetLidar.SET_TURN_ON_OFF_FAN    
 
-
+@support_only([
+    (DeviceType.MID_40   , (3,7,0,0)),
+    (DeviceType.HORIZON  , (6,4,0,0)),
+    (DeviceType.TELE_15  , (7,3,0,0)),
+])
 class GetTurnOnOffFanState(Lidar):
     CMD_TYPE = Frame.Type.CMD
     CMD_ID = Frame.SetLidar.GET_TURN_ON_OFF_FAN_STATE
 
+@support_only([
+    (DeviceType.MID_40   , (3,7,0,0)),
+    (DeviceType.HORIZON  , (6,4,0,0)),
+    (DeviceType.TELE_15  , (7,3,0,0)),
+])
 class GetTurnOnOffFanStateResponse( Lidar, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetLidar.GET_TURN_ON_OFF_FAN_STATE
@@ -232,6 +251,12 @@ class GetTurnOnOffFanStateResponse( Lidar, IsErrorResponse):
         is_error, state = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(state, is_error, device_type, device_version)
 
+@support_only([
+    (DeviceType.MID_40   , (10,3,0,0)),
+    (DeviceType.HORIZON  , (6,4,0,0)),
+    (DeviceType.TELE_15  , (7,3,0,0)),
+    (DeviceType.AVIA     , (11,6,0,0)),
+])
 class SetLidarReturnMode(Lidar):
     CMD_TYPE = Frame.Type.CMD
     CMD_ID = Frame.SetLidar.SET_LIDAR_RETURN_MODE 
@@ -263,13 +288,31 @@ class SetLidarReturnMode(Lidar):
         return_mode, = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(return_mode, device_type, device_version)
 
+@support_only([
+    (DeviceType.MID_40   , (10,3,0,0)),
+    (DeviceType.HORIZON  , (6,4,0,0)),
+    (DeviceType.TELE_15  , (7,3,0,0)),
+    (DeviceType.AVIA     , (11,6,0,0)),
+])
 class SetLidarReturnModeResponse( Lidar, IsErrorResponseOnly):
     CMD_ID = Frame.SetLidar.SET_LIDAR_RETURN_MODE
 
+@support_only([
+    (DeviceType.MID_40   , (10,3,0,0)),
+    (DeviceType.HORIZON  , (6,4,0,0)),
+    (DeviceType.TELE_15  , (7,3,0,0)),
+    (DeviceType.AVIA     , (11,6,0,0)),
+])
 class GetLidarReturnMode(Lidar):
     CMD_TYPE = Frame.Type.CMD
     CMD_ID = Frame.SetLidar.GET_LIDAR_RETURN_MODE 
 
+@support_only([
+    (DeviceType.MID_40   , (10,3,0,0)),
+    (DeviceType.HORIZON  , (6,4,0,0)),
+    (DeviceType.TELE_15  , (7,3,0,0)),
+    (DeviceType.AVIA     , (11,6,0,0)),
+])
 class GetLidarReturnModeResponse(Lidar, IsErrorResponse):
     CMD_ID = Frame.SetLidar.GET_LIDAR_RETURN_MODE
     _PACK_FORMAT = '<?B' #is_error, return_mode
@@ -301,6 +344,11 @@ class GetLidarReturnModeResponse(Lidar, IsErrorResponse):
         is_error, return_mode = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(return_mode, is_error, device_type, device_version)
     
+@support_only([
+    (DeviceType.HORIZON  , (6,4,0,0)),
+    (DeviceType.TELE_15  , (7,3,0,0)),
+    (DeviceType.AVIA     , (11,6,0,0)),
+])    
 class SetImuDataPushFrequency(Lidar):
     CMD_TYPE = Frame.Type.CMD
     CMD_ID = Frame.SetLidar.SET_IMU_DATA_PUSH_FREQUENCY
@@ -332,13 +380,28 @@ class SetImuDataPushFrequency(Lidar):
         frequency, = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(frequency, device_type, device_version)
 
+@support_only([
+    (DeviceType.HORIZON  , (6,4,0,0)),
+    (DeviceType.TELE_15  , (7,3,0,0)),
+    (DeviceType.AVIA     , (11,6,0,0)),
+])    
 class SetImuDataPushFrequencyResponse( Lidar, IsErrorResponseOnly):
     CMD_ID = Frame.SetLidar.SET_IMU_DATA_PUSH_FREQUENCY
 
+@support_only([
+    (DeviceType.HORIZON  , (6,4,0,0)),
+    (DeviceType.TELE_15  , (7,3,0,0)),
+    (DeviceType.AVIA     , (11,6,0,0)),
+])    
 class GetImuDataPushFrequency(Lidar):
     CMD_TYPE = Frame.Type.CMD
     CMD_ID = Frame.SetLidar.GET_IMU_DATA_PUSH_FREQUENCY 
 
+@support_only([
+    (DeviceType.HORIZON  , (6,4,0,0)),
+    (DeviceType.TELE_15  , (7,3,0,0)),
+    (DeviceType.AVIA     , (11,6,0,0)),
+])    
 class GetImuDataPushFrequencyResponse( Lidar, IsErrorResponse):
     CMD_ID = Frame.SetLidar.GET_IMU_DATA_PUSH_FREQUENCY
     _PACK_FORMAT = '<?B' #is_error, frequency
@@ -370,6 +433,12 @@ class GetImuDataPushFrequencyResponse( Lidar, IsErrorResponse):
         is_error, frequency = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(frequency, is_error, device_type, device_version)
 
+@support_only([
+    (DeviceType.MID_40   , (3,7,0,0)),
+    (DeviceType.HORIZON  , (6,4,0,0)),
+    (DeviceType.TELE_15  , (7,3,0,0)),
+    (DeviceType.AVIA     , (11,6,0,0)),
+])    
 class UpdateUtcSynchronizationTime(Lidar):
     CMD_TYPE = Frame.Type.CMD
     CMD_ID = Frame.SetLidar.UPDATE_UTC_SYNCHRONIZATION_TIME 
@@ -394,5 +463,11 @@ class UpdateUtcSynchronizationTime(Lidar):
         year, month, day, hour, us = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(year, month, day, hour, us, device_type, device_version)
 
+@support_only([
+    (DeviceType.MID_40   , (3,7,0,0)),
+    (DeviceType.HORIZON  , (6,4,0,0)),
+    (DeviceType.TELE_15  , (7,3,0,0)),
+    (DeviceType.AVIA     , (11,6,0,0)),
+]) 
 class UpdateUtcSynchronizationTimeResponse( Lidar, IsErrorResponseOnly):
     CMD_ID = Frame.SetLidar.UPDATE_UTC_SYNCHRONIZATION_TIME

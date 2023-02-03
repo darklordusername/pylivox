@@ -46,8 +46,8 @@ def support_only(devices:'list(tuple(DeviceType, tuple(int,int,int,int)))'):
     return decorator
 
 #Global config for current device
-Device_type = DeviceType.MID_40
-Device_version = (1,1,1,1)
+Device_type = DeviceType.HORIZON
+Device_version = (11,11,1,1)
 
 class Frame(abc.ABC):
     """Low level wrapper for command,response """

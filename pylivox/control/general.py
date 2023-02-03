@@ -7,7 +7,10 @@ import struct
 import ipaddress
 
 #project 
-from pylivox.control.frame import Frame, Cmd, IsErrorResponse, IsErrorResponseOnly, DeviceType, Device_type, Device_version
+from pylivox.control.frame import (Frame, Cmd, 
+                                    IsErrorResponse, IsErrorResponseOnly,
+                                    DeviceType, Device_type, Device_version,
+                                    support_only, )
 
 
 class General(Cmd):
@@ -516,22 +519,21 @@ class GetDeviceIpInformationResponse(ConfigureStaticDynamicIp, IsErrorResponse):
             gw = None
         return cls(is_static, ip, mask, gw, is_error, device_type, device_version)
 
+
+@support_only([
+    (DeviceType.HUB     , (8,7,0,0) ),
+    (DeviceType.MID_40  , (3,7,0,0) ),
+    (DeviceType.MID_70  , (10,3,0,0)),
+    (DeviceType.HORIZON , (6,4,0,0) ),
+    (DeviceType.TELE_15 , (7,3,0,0) ),
+    (DeviceType.AVIA    , (11,6,0,0)),
+])
 class RebootDevice(General):
     CMD_TYPE = Frame.Type.CMD
     CMD_ID = Frame.SetGeneral.REBOOT_DEVICE
     _PACK_FORMAT = '<H' #timeout
 
     def __init__(self, timeout:int, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        if( (device_type == DeviceType.HUB and device_version >= (8,7,0,0)) or
-            (device_type == DeviceType.MID_40 and device_version >= (3,7,0,0)) or 
-            (device_type == DeviceType.MID_70 and device_version >= (10,3,0,0)) or 
-            (device_type == DeviceType.HORIZON and device_version >= (6,4,0,0)) or 
-            (device_type == DeviceType.TELE_15 and device_version >= (7,3,0,0)) or
-            (device_type == DeviceType.AVIA and device_version >= (11,6,0,0))
-            ):
-            pass
-        else:
-            raise Exception('Command not supported by this device')
         super().__init__(device_type, device_version)
         self.timeout = timeout
 
@@ -555,22 +557,17 @@ class RebootDevice(General):
         timeout, = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(timeout, device_type, device_version)
 
+@support_only([
+    (DeviceType.HUB     ,(8,7,0,0) ), 
+    (DeviceType.MID_40  ,(3,7,0,0) ),  
+    (DeviceType.MID_70  ,(10,3,0,0)), 
+    (DeviceType.HORIZON ,(6,4,0,0) ),  
+    (DeviceType.TELE_15 ,(7,3,0,0) ), 
+    (DeviceType.AVIA    ,(11,6,0,0)),
+])
 class RebootDeviceResponse(General, IsErrorResponseOnly):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.REBOOT_DEVICE
-
-    def __init__(self, is_error:bool=False, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        super().__init__(is_error, device_type, device_version)
-        if( (device_type == DeviceType.HUB and device_version >= (8,7,0,0)) or
-            (device_type == DeviceType.MID_40 and device_version >= (3,7,0,0)) or 
-            (device_type == DeviceType.MID_70 and device_version >= (10,3,0,0)) or 
-            (device_type == DeviceType.HORIZON and device_version >= (6,4,0,0)) or 
-            (device_type == DeviceType.TELE_15 and device_version >= (7,3,0,0)) or
-            (device_type == DeviceType.AVIA and device_version >= (11,6,0,0))
-            ):
-            pass
-        else:
-            raise Exception('Command not supported by this device')
 
 class ConfigurationParameter:
 
@@ -643,20 +640,18 @@ class ConfigurationParameter:
             result.append(parameter)
         return result   
 
+@support_only([
+    (DeviceType.HUB     ,(8,9,0,0) ), 
+    (DeviceType.HORIZON ,(6,11,0,0)), 
+    (DeviceType.TELE_15 ,(7,9,0,0) ), 
+    (DeviceType.MID_70  ,(10,3,0,0)), 
+    (DeviceType.AVIA    ,(11,6,0,0)), 
+])
 class WriteConfigurationParameters(General):
     CMD_TYPE = Frame.Type.CMD
     CMD_ID = Frame.SetGeneral.WRITE_CONFIGURATION_PARAMETERS
 
     def __init__(self, param_list:'list(ConfigurationParameter)|bytes', device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        if ( (device_type == DeviceType.HUB and device_version >= (8,9,0,0)) or 
-             (device_type == DeviceType.HORIZON and device_version >= (6,11,0,0)) or 
-             (device_type == DeviceType.TELE_15 and device_version >= (7,9,0,0)) or 
-             (device_type == DeviceType.MID_70 and device_version >= (10,3,0,0)) or 
-             (device_type == DeviceType.AVIA and device_version >= (11,6,0,0)) 
-            ):
-            pass
-        else:
-            raise Exception('Command not supported by this device')
         super().__init__(device_type, device_version)
         self.param_list = param_list
 
@@ -680,6 +675,13 @@ class WriteConfigurationParameters(General):
     def from_payload(cls, payload:bytes, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
         return cls(payload, device_type, device_version)
 
+@support_only([
+    (DeviceType.HUB     ,(8,9,0,0) ), 
+    (DeviceType.HORIZON ,(6,11,0,0)), 
+    (DeviceType.TELE_15 ,(7,9,0,0) ), 
+    (DeviceType.MID_70  ,(10,3,0,0)), 
+    (DeviceType.AVIA    ,(11,6,0,0)), 
+])
 class WriteConfigurationParametersResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.WRITE_CONFIGURATION_PARAMETERS
@@ -692,15 +694,6 @@ class WriteConfigurationParametersResponse(General, IsErrorResponse):
                     device_type:DeviceType=Device_type, 
                     device_version:'tuple(int,int,int,int)'=Device_version
                     ):
-        if ( (device_type == DeviceType.HUB and device_version >= (8,9,0,0)) or 
-             (device_type == DeviceType.HORIZON and device_version >= (6,11,0,0)) or 
-             (device_type == DeviceType.TELE_15 and device_version >= (7,9,0,0)) or 
-             (device_type == DeviceType.MID_70 and device_version >= (10,3,0,0)) or 
-             (device_type == DeviceType.AVIA and device_version >= (11,6,0,0)) 
-            ):
-            pass
-        else:
-            raise Exception('Command not supported by this device')
         super().__init__(device_type, device_version)
         self.is_error = is_error
         self.error_key = error_key
@@ -740,20 +733,18 @@ class WriteConfigurationParametersResponse(General, IsErrorResponse):
         is_error, error_key, error_code = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(error_key, error_code, is_error, device_type, device_version)
 
+@support_only([
+    (DeviceType.HUB     ,(8,9,0,0) ), 
+    (DeviceType.HORIZON ,(6,11,0,0)), 
+    (DeviceType.TELE_15 ,(7,9,0,0) ), 
+    (DeviceType.MID_70  ,(10,3,0,0)), 
+    (DeviceType.AVIA    ,(11,6,0,0)), 
+])
 class ReadConfigurationParameters(General):
     CMD_TYPE = Frame.Type.CMD
     CMD_ID = Frame.SetGeneral.READ_CONFIGURATION_PARAMETERS
 
     def __init__(self, keys_quantity:int, keys:'list(ConfigurationParameter.Key)', device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        if ( (device_type == DeviceType.HUB and device_version >= (8,9,0,0)) or 
-             (device_type == DeviceType.HORIZON and device_version >= (6,11,0,0)) or 
-             (device_type == DeviceType.TELE_15 and device_version >= (7,9,0,0)) or 
-             (device_type == DeviceType.MID_70 and device_version >= (10,3,0,0)) or 
-             (device_type == DeviceType.AVIA and device_version >= (11,6,0,0)) 
-            ):
-            pass
-        else:
-            raise Exception('Command not supported by this device')
         super().__init__(device_type, device_version)
         self.keys_quantity = keys_quantity
         self.keys = keys
@@ -790,6 +781,13 @@ class ReadConfigurationParameters(General):
         keys = [ ConfigurationParameter.Key(int.from_bytes(key,'little')) for key in keys_bytes]
         return cls(keys_quantity, keys, device_type, device_version)
 
+@support_only([
+    (DeviceType.HUB     ,(8,9,0,0) ),  
+    (DeviceType.HORIZON ,(6,11,0,0)),  
+    (DeviceType.TELE_15 ,(7,9,0,0) ),  
+    (DeviceType.MID_70  ,(10,3,0,0)), 
+    (DeviceType.AVIA    ,(11,6,0,0)), 
+])
 class ReadConfigurationParametersResponse(General, IsErrorResponse):
     CMD_TYPE = Frame.Type.AKN
     CMD_ID = Frame.SetGeneral.READ_CONFIGURATION_PARAMETERS
@@ -802,15 +800,6 @@ class ReadConfigurationParametersResponse(General, IsErrorResponse):
                 device_type:DeviceType=Device_type, 
                 device_version:'tuple(int,int,int,int)'=Device_version
                 ):
-        if ( (device_type == DeviceType.HUB and device_version >= (8,9,0,0)) or 
-             (device_type == DeviceType.HORIZON and device_version >= (6,11,0,0)) or 
-             (device_type == DeviceType.TELE_15 and device_version >= (7,9,0,0)) or 
-             (device_type == DeviceType.MID_70 and device_version >= (10,3,0,0)) or 
-             (device_type == DeviceType.AVIA and device_version >= (11,6,0,0)) 
-            ):
-            pass
-        else:
-            raise Exception('Command not supported by this device')
         super().__init__(device_type, device_version)
         self.is_error = is_error
         self.error_key = error_key
