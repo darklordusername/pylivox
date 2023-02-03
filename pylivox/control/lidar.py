@@ -7,7 +7,7 @@ import enum
 from datetime import datetime
 
 # project
-from pylivox.control.frame import Frame, Cmd, IsErrorResponse, IsErrorResponseOnly, DeviceType, Device_type, Device_version, support_only
+from pylivox.control.frame import Frame, Cmd, IsErrorResponse, IsErrorResponseOnly, DeviceType, support_only
 
 
 class PowerMode(enum.Enum):

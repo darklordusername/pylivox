@@ -2,7 +2,7 @@
 #std
 import struct
 #proj
-from pylivox.control.frame import Frame, DeviceType, Device_type, Device_version
+from pylivox.control.frame import Frame, DeviceType
 import pylivox.control.general as general
 import pylivox.control.hub as hub
 import pylivox.control.lidar as lidar

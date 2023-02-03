@@ -9,7 +9,7 @@ import ipaddress
 # project
 from pylivox.control.frame import (Frame, Cmd,
                                    IsErrorResponse, IsErrorResponseOnly,
-                                   DeviceType, Device_type, Device_version,
+                                   DeviceType, get_default_device_type, get_default_device_version,
                                    support_only, )
 
 
@@ -179,8 +179,8 @@ class Handshake(General):
     def from_payload(cls, payload: bytes,
                      device_type: DeviceType = None,
                      device_version: 'tuple(int,int,int,int)' = None):
-        device_type = device_type or Device_type
-        device_version = device_version or Device_version
+        device_type = device_type or get_default_device_type()
+        device_version = device_version or get_default_device_version()
         if ((device_type == DeviceType.HORIZON and device_version >= (6, 4, 0, 0)) or
             (device_type == DeviceType.TELE_15 and device_version >= (3, 7, 0, 0))
             ):
@@ -485,8 +485,8 @@ class ConfigureStaticDynamicIp(General):
 
     @classmethod
     def from_payload(cls, payload: bytes, device_type = None, device_version = None):
-        device_type = device_type or Device_type 
-        device_version = device_version or Device_version
+        device_type = device_type or get_default_device_type() 
+        device_version = device_version or get_default_device_version()
         if ((device_type == DeviceType.HORIZON and device_version >= (6, 4, 0, 0)) or
             (device_type == DeviceType.TELE_15 and device_version >= (7, 3, 0, 0)) or
             (device_type == DeviceType.MID_70 and device_version >= (10, 3, 0, 0)) or
@@ -540,8 +540,8 @@ class GetDeviceIpInformationResponse(ConfigureStaticDynamicIp, IsErrorResponse):
 
     @classmethod
     def from_payload(cls, payload, device_type = None, device_version = None):
-        device_type = device_type or Device_type
-        device_version = device_version or Device_version
+        device_type = device_type or get_default_device_type()
+        device_version = device_version or get_default_device_version()
         if ((device_type == DeviceType.HORIZON and device_version >= (6, 4, 0, 0)) or
             (device_type == DeviceType.TELE_15 and device_version >= (7, 3, 0, 0)) or
             (device_type == DeviceType.MID_70 and device_version >= (10, 3, 0, 0)) or

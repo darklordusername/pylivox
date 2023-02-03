@@ -27,6 +27,29 @@ class DeviceType(enum.Enum):
     MID_70   = 6
     AVIA     = 7
 
+
+#Global config for current device
+_Device_type = DeviceType.HORIZON
+_Device_version = (11,11,1,1)
+
+def set_default_device_type(device_type:DeviceType):
+    global _Device_type
+    _Device_type = device_type
+
+def get_default_device_type()->DeviceType:
+    return _Device_type
+
+def set_default_device_version(device_version:'tuple(int,int,int,int)'):
+    assert type(device_version) is tuple
+    assert not [v for v in device_version if type(v) is not int]
+    global _Device_version
+    _Device_version = device_version
+
+def get_default_device_version()->'tuple(int,int,int,int)':
+    return _Device_version
+
+
+
 def support_only(devices:'list(tuple(DeviceType, tuple(int,int,int,int)))'):
     def decorator(cls):
         old_init= cls.__init__
@@ -36,8 +59,8 @@ def support_only(devices:'list(tuple(DeviceType, tuple(int,int,int,int)))'):
             b = signature.bind(self, *args, **kwargs)
             b.apply_defaults()
             arguments = b.arguments
-            device_type = arguments['device_type'] or Device_type
-            device_version = arguments['device_version'] or Device_version
+            device_type = arguments['device_type'] or get_default_device_type()
+            device_version = arguments['device_version'] or get_default_device_version()
             if not next((d for d,v in devices if device_type == d and device_version >= v), None):
                 raise Exception(f'Device {device_type} version:{device_version} does not support {self}')
             old_init(self, *args, **kwargs)
@@ -45,9 +68,6 @@ def support_only(devices:'list(tuple(DeviceType, tuple(int,int,int,int)))'):
         return cls
     return decorator
 
-#Global config for current device
-Device_type = DeviceType.HORIZON
-Device_version = (11,11,1,1)
 
 class Frame(abc.ABC):
     """Low level wrapper for command,response """
@@ -120,8 +140,8 @@ class Frame(abc.ABC):
                 seq=0
                 ):
         self.seq = seq
-        self.device_type = device_type or Device_type
-        self.device_version = device_version or Device_version
+        self.device_type = device_type or get_default_device_type()
+        self.device_version = device_version or get_default_device_version()
 
     @property
     def device_version(self)->'tuple(int,int,int,int)':
@@ -229,7 +249,7 @@ class IsErrorResponse(Cmd):
 
 class IsErrorResponseOnly(IsErrorResponse): 
 
-    def __init__(self, is_error:bool=False, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
+    def __init__(self, is_error:bool=False, device_type:DeviceType=None, device_version:'tuple(int,int,int,int)'=None):
         super().__init__(device_type, device_version)
         self.is_error = is_error
 
@@ -239,7 +259,7 @@ class IsErrorResponseOnly(IsErrorResponse):
         return super().cmd_payload(payload_body)
 
     @classmethod
-    def from_payload(cls, payload:bytes, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
+    def from_payload(cls, payload:bytes, device_type=None, device_version=None):
         is_error, = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(is_error, device_type, device_version)
 
