@@ -64,7 +64,7 @@ class Lidar:
     def _rx(self):
         while True:
             try:
-                data, addr = self.s.recvfrom(1024*2)
+                data, addr = self.s.recvfrom(1500)
                 self.heartbeat_time = time.time()
                 frame = FrameFrom(data)
                 logger.info(f'<< {addr} {frame}')
@@ -72,6 +72,7 @@ class Lidar:
                 akn = handler(self, frame)
                 if akn: 
                     self.send(akn)
+                continue
             except socket.timeout:
                 pass
             except KeyError as e:
