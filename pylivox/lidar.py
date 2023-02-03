@@ -7,7 +7,7 @@ import enum
 #import proj
 import log
 from pylivox.control import general, lidar
-from pylivox.control.frame import Frame
+from pylivox.control.frame import Frame, set_default_device_type, set_default_device_version
 from pylivox.control.utils import FrameFrom
 
 logger = log.getLogger(__name__)
@@ -24,10 +24,14 @@ class Lidar:
         self.device_version = fwv
         self.master:general.Handshake = None
         #Update libs defaults device's type,version 
-        general.Device_type = self.device_type
-        general.Device_version = self.device_version
+        set_default_device_type(self.device_type)
+        set_default_device_version(self.device_version)
         #
         self.is_spherical = False
+        self.rain_fog_suppression = False
+        self.fan = False
+        self.return_mode = lidar.ReturnMode.DUAL_RETURN
+        self.imu_data_push_freq = lidar.PushFrequency.FREQ_0HZ
         self.extrinsic_parameters = lidar.ReadLidarExtrinsicParametersResponse(0.0, 0.0, 0.0, 0, 0, 0)
         self.heartbeat_time = time.time() - 5
         self.is_connected = False
@@ -120,7 +124,8 @@ class Lidar:
 
 
     def onSetMode(self, req: lidar.SetMode):
-        pass
+        self.power_mode = req.power_mode
+        return lidar.SetModeResponse(result=lidar.SetModeResponse.Result.Success)
     def onWriteLidarExtrinsicParameters(self, req: lidar.WriteLidarExtrinsicParameters):
         self.extrinsic_parameters.roll = req.roll
         self.extrinsic_parameters.yaw = req.yaw
@@ -137,17 +142,21 @@ class Lidar:
                                                           self.extrinsic_parameters.y,
                                                           self.extrinsic_parameters.z)
     def onTurnOnOffRainFogSuppression(self, req: lidar.TurnOnOffRainFogSuppression):
-        pass
+        self.rain_fog_suppression = req.is_enable
+        return lidar.TurnOnOffRainFogSuppressionResponse()
     def onSetTurnOnOffFan(self, req: lidar.SetTurnOnOffFan):
-        pass
+        self.fan = req.is_enable
+        return lidar.SetTurnOnOffFanResponse()
     def onGetTurnOnOffFanState(self, req: lidar.GetTurnOnOffFanState):
         return lidar.GetTurnOnOffFanStateResponse(False)
     def onSetLidarReturnMode(self, req: lidar.SetLidarReturnMode):
-        pass
+        self.return_mode = req.return_mode
+        return lidar.SetLidarReturnModeResponse()
     def onGetLidarReturnMode(self, req: lidar.GetLidarReturnMode):
-        pass
+        return lidar.GetLidarReturnModeResponse(self.return_mode)
     def onSetImuDataPushFrequency(self, req: lidar.SetImuDataPushFrequency):
-        pass
+        self.imu_data_push_freq = req.frequency
+        return lidar.SetImuDataPushFrequencyResponse()
     def onGetImuDataPushFrequency(self, req: lidar.GetImuDataPushFrequency):
         return lidar.GetImuDataPushFrequencyResponse(lidar.PushFrequency.FREQ_0HZ)
     def onUpdateUtcSynchronizationTime(self, req: lidar.UpdateUtcSynchronizationTime):
@@ -167,15 +176,15 @@ class Lidar:
         # general.WriteConfigurationParameters    : onWriteConfigurationParameters,                    
         # general.ReadConfigurationParameters     : onReadConfigurationParameters,                   
 
-        # lidar.SetMode                           : onSetMode,       
+        lidar.SetMode                           : onSetMode,       
         lidar.WriteLidarExtrinsicParameters     : onWriteLidarExtrinsicParameters,                             
         lidar.ReadLidarExtrinsicParameters      : onReadLidarExtrinsicParameters,                            
-        # lidar.TurnOnOffRainFogSuppression       : onTurnOnOffRainFogSuppression,                           
-        # lidar.SetTurnOnOffFan                   : onSetTurnOnOffFan,               
+        lidar.TurnOnOffRainFogSuppression       : onTurnOnOffRainFogSuppression,                           
+        lidar.SetTurnOnOffFan                   : onSetTurnOnOffFan,               
         lidar.GetTurnOnOffFanState              : onGetTurnOnOffFanState,                    
-        # lidar.SetLidarReturnMode                : onSetLidarReturnMode,                  
-        # lidar.GetLidarReturnMode                : onGetLidarReturnMode,                  
-        # lidar.SetImuDataPushFrequency           : onSetImuDataPushFrequency,                       
+        lidar.SetLidarReturnMode                : onSetLidarReturnMode,                  
+        lidar.GetLidarReturnMode                : onGetLidarReturnMode,                  
+        lidar.SetImuDataPushFrequency           : onSetImuDataPushFrequency,                       
         lidar.GetImuDataPushFrequency           : onGetImuDataPushFrequency,                       
         # lidar.UpdateUtcSynchronizationTime      : onUpdateUtcSynchronizationTime,                            
     }
