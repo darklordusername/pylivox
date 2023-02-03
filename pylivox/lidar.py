@@ -27,8 +27,11 @@ class Lidar:
         general.Device_type = self.device_type
         general.Device_version = self.device_version
         #
+        self.is_spherical = False
+        self.extrinsic_parameters = lidar.ReadLidarExtrinsicParametersResponse(0.0, 0.0, 0.0, 0, 0, 0)
         self.heartbeat_time = time.time() - 5
         self.is_connected = False
+        self.sampling = False
         self.state:general.WorkState.Lidar = general.WorkState.Lidar.Standby
         self.seq = 0
         self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -77,48 +80,102 @@ class Lidar:
         logger.debug(f'>> {frame}')
         self.s.sendto(frame.frame, (str(self.master.ip), self.master.cmd_port))
 
-    def onHandshake(self, handshake:general.Handshake):
+      
+
+
+    def onHandshake(self, req: general.Handshake):
         if not self.is_connected:
-            self.master = handshake
+            self.master = req
             self.heartbeat_time = time.time()
             self.is_connected = True
             return general.HandshakeResponse()
         else:
             logger.error('No handshake expected')
 
-    def onHeartbeat(self, heartbeat:general.Heartbeat):
-        # self.heartbeat_time = time.time()   
+    def onQueryDeviceInformation(self, req: general.QueryDeviceInformation):
+        return general.QueryDeviceInformationResponse()
+    def onHeartbeat(self, req: general.Heartbeat):
         return general.HeartbeatResponse(work_state=self.state, 
                                         feature_msg=0,
                                         ack_msg=0)
-
-    def onDisconnect(self, disconnect:general.Disconnect):
+    def onStartStopSampling(self, req: general.StartStopSampling):
+        self.sampling = req.is_start
+        return general.StartStopSamplingResponse()
+    def onChangeCoordinateSystem(self, req: general.ChangeCoordinateSystem):
+        self.is_spherical = req.is_spherical
+        return general.ChangeCoordinateSystemResponse()
+    def onDisconnect(self, req: general.Disconnect):
         self.heartbeat_time = time.time() - 5
-        # return general.DisconnectResponse(False)
-
-    def onQueryDeviceInformation(self, info:general.QueryDeviceInformation):
-        return general.QueryDeviceInformationResponse()
-
-    def onReadLidarExtrinsicParameters(self, req:lidar.ReadLidarExtrinsicParameters):
-        return lidar.ReadLidarExtrinsicParametersResponse(0.0, 0.0, 0.0, 0, 0, 0)
-
-    def onGetDeviceIpInformation(self, ip_info:general.GetDeviceIpInformation):
+    def onConfigureStaticDynamicIp(self, req: general.ConfigureStaticDynamicIp):
+        pass
+    def onGetDeviceIpInformation(self, req: general.GetDeviceIpInformation):
         return general.GetDeviceIpInformationResponse(True, '192.168.222.56', '255.255.255.0', '192.168.222.1')
+    def onRebootDevice(self, req: general.RebootDevice):
+        pass
+    def onWriteConfigurationParameters(self, req: general.WriteConfigurationParameters):
+        pass
+    def onReadConfigurationParameters(self, req: general.ReadConfigurationParameters):
+        pass
 
-    def onGetTurnOnOffFanState(self, req:lidar.GetTurnOnOffFanState):
+
+
+    def onSetMode(self, req: lidar.SetMode):
+        pass
+    def onWriteLidarExtrinsicParameters(self, req: lidar.WriteLidarExtrinsicParameters):
+        self.extrinsic_parameters.roll = req.roll
+        self.extrinsic_parameters.yaw = req.yaw
+        self.extrinsic_parameters.pitch = req.pitch
+        self.extrinsic_parameters.x = req.x
+        self.extrinsic_parameters.y = req.y
+        self.extrinsic_parameters.z = req.z
+        return lidar.WriteLidarExtrinsicParametersResponse()
+    def onReadLidarExtrinsicParameters(self, req: lidar.ReadLidarExtrinsicParameters):
+        return lidar.ReadLidarExtrinsicParametersResponse(self.extrinsic_parameters.roll,
+                                                          self.extrinsic_parameters.pitch,
+                                                          self.extrinsic_parameters.yaw,
+                                                          self.extrinsic_parameters.x,
+                                                          self.extrinsic_parameters.y,
+                                                          self.extrinsic_parameters.z)
+    def onTurnOnOffRainFogSuppression(self, req: lidar.TurnOnOffRainFogSuppression):
+        pass
+    def onSetTurnOnOffFan(self, req: lidar.SetTurnOnOffFan):
+        pass
+    def onGetTurnOnOffFanState(self, req: lidar.GetTurnOnOffFanState):
         return lidar.GetTurnOnOffFanStateResponse(False)
-
-    def onGetImuDataPushFrequency(self, req:lidar.GetImuDataPushFrequency):
+    def onSetLidarReturnMode(self, req: lidar.SetLidarReturnMode):
+        pass
+    def onGetLidarReturnMode(self, req: lidar.GetLidarReturnMode):
+        pass
+    def onSetImuDataPushFrequency(self, req: lidar.SetImuDataPushFrequency):
+        pass
+    def onGetImuDataPushFrequency(self, req: lidar.GetImuDataPushFrequency):
         return lidar.GetImuDataPushFrequencyResponse(lidar.PushFrequency.FREQ_0HZ)
-
+    def onUpdateUtcSynchronizationTime(self, req: lidar.UpdateUtcSynchronizationTime):
+        pass
+    
 
     HANDLERS = {
-        general.Handshake                     : onHandshake                    ,                                        
-        general.Heartbeat                     : onHeartbeat                    ,                
-        general.Disconnect                    : onDisconnect                   ,                                    
-        general.QueryDeviceInformation        : onQueryDeviceInformation       ,                                    
-        lidar.ReadLidarExtrinsicParameters    : onReadLidarExtrinsicParameters ,                                    
-        general.GetDeviceIpInformation        : onGetDeviceIpInformation       ,                                    
-        lidar.GetTurnOnOffFanState            : onGetTurnOnOffFanState         ,                                    
-        lidar.GetImuDataPushFrequency         : onGetImuDataPushFrequency      ,                                    
+        general.Handshake                       : onHandshake, 
+        general.QueryDeviceInformation          : onQueryDeviceInformation,              
+        general.Heartbeat                       : onHeartbeat, 
+        general.StartStopSampling               : onStartStopSampling,         
+        general.ChangeCoordinateSystem          : onChangeCoordinateSystem,              
+        general.Disconnect                      : onDisconnect,  
+        # general.ConfigureStaticDynamicIp        : onConfigureStaticDynamicIp,                
+        general.GetDeviceIpInformation          : onGetDeviceIpInformation,              
+        # general.RebootDevice                    : onRebootDevice,    
+        # general.WriteConfigurationParameters    : onWriteConfigurationParameters,                    
+        # general.ReadConfigurationParameters     : onReadConfigurationParameters,                   
+
+        # lidar.SetMode                           : onSetMode,       
+        lidar.WriteLidarExtrinsicParameters     : onWriteLidarExtrinsicParameters,                             
+        lidar.ReadLidarExtrinsicParameters      : onReadLidarExtrinsicParameters,                            
+        # lidar.TurnOnOffRainFogSuppression       : onTurnOnOffRainFogSuppression,                           
+        # lidar.SetTurnOnOffFan                   : onSetTurnOnOffFan,               
+        lidar.GetTurnOnOffFanState              : onGetTurnOnOffFanState,                    
+        # lidar.SetLidarReturnMode                : onSetLidarReturnMode,                  
+        # lidar.GetLidarReturnMode                : onGetLidarReturnMode,                  
+        # lidar.SetImuDataPushFrequency           : onSetImuDataPushFrequency,                       
+        lidar.GetImuDataPushFrequency           : onGetImuDataPushFrequency,                       
+        # lidar.UpdateUtcSynchronizationTime      : onUpdateUtcSynchronizationTime,                            
     }
