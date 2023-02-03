@@ -9,6 +9,7 @@ import log
 from pylivox.control import general, lidar
 from pylivox.control.frame import Frame, set_default_device_type, set_default_device_version
 from pylivox.control.utils import FrameFrom
+from pylivox.data import Frame as DataFrame
 
 logger = log.getLogger(__name__)
 
@@ -42,6 +43,7 @@ class Lidar:
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
         self.s.bind((str(ipaddress.IPv4Address("0.0.0.0")), 65000)) 
         self._run_broadcast()
+        self._data_tx()
         self._rx()
 
     def _run_broadcast(self):
@@ -81,6 +83,21 @@ class Lidar:
                 logger.exception(e)
             time.sleep(1)
 
+    def _data_tx(self):
+        def f():
+            while True:
+                try:
+                    if not self.is_connected:
+                        self.sampling = False
+                    if self.sampling:
+                        for i in range(100):
+                            self.s.sendto(DataFrame().frame, (str(self.master.ip), self.master.point_port))
+                except Exception as e:
+                    logger.exception(e)
+                time.sleep(1)
+        self._data_tx_thread = threading.Thread(target=f, name='data_tx', daemon=True)
+        self._data_tx_thread.start()
+
     def send(self, frame:Frame):
         logger.debug(f'>> {frame}')
         self.s.sendto(frame.frame, (str(self.master.ip), self.master.cmd_port))
@@ -104,7 +121,9 @@ class Lidar:
                                         feature_msg=0,
                                         ack_msg=0)
     def onStartStopSampling(self, req: general.StartStopSampling):
+        logger.debug(f'sampling: {self.sampling}->{req.is_start}')
         self.sampling = req.is_start
+        self.state:general.WorkState.Lidar = general.WorkState.Lidar.Normal if self.sampling else general.WorkState.Lidar.Standby
         return general.StartStopSamplingResponse()
     def onChangeCoordinateSystem(self, req: general.ChangeCoordinateSystem):
         self.is_spherical = req.is_spherical
