@@ -13,4 +13,4 @@ logger = log.getLogger(__name__)
 logger.info('========== START ==========')
 
 if __name__ == '__main__':
-   Lidar('test', general.DeviceType.MID_40, (1,1,1,1))
+   Lidar('test', general.DeviceType.MID_40, (10,10,1,1))

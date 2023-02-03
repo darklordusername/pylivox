@@ -18,10 +18,15 @@ class Lidar:
 # 
     def __init__(self, serial:'str|bytes', model:general.DeviceType, fwv:'tuple(int,int,int,int)'):
         self.serial = serial
-        self.model = model
-        self.broadcast = general.BroadcastMsg(general.Broadcast(serial, 0x31), model)
-        self.device_info = general.QueryDeviceInformationResponse(fwv)
+        general.DeviceType(model)
+        self.device_type = model
+        general.QueryDeviceInformationResponse(device_version=fwv)
+        self.device_version = fwv
         self.master:general.Handshake = None
+        #Update libs defaults device's type,version 
+        general.Device_type = self.device_type
+        general.Device_version = self.device_version
+        #
         self.heartbeat_time = time.time() - 5
         self.is_connected = False
         self.state:general.WorkState.Lidar = general.WorkState.Lidar.Standby
@@ -34,8 +39,8 @@ class Lidar:
 
     def _run_broadcast(self):
         def t():
+            msg = general.BroadcastMsg(general.Broadcast(self.serial, 0x31), self.device_type).frame
             while True:
-                msg = self.broadcast.frame
                 try:
                     time.sleep(1)
                     elapsed = time.time() - self.heartbeat_time
@@ -92,7 +97,7 @@ class Lidar:
         # return general.DisconnectResponse(False)
 
     def onQueryDeviceInformation(self, info:general.QueryDeviceInformation):
-        return self.device_info
+        return general.QueryDeviceInformationResponse()
 
     def onReadLidarExtrinsicParameters(self, req:lidar.ReadLidarExtrinsicParameters):
         return lidar.ReadLidarExtrinsicParametersResponse(0.0, 0.0, 0.0, 0, 0, 0)
