@@ -7,7 +7,7 @@ import enum
 from datetime import datetime
 
 #project 
-from  pylivox.control.frame import Frame, Cmd, IsErrorResponse, IsErrorResponseOnly, DeviceType, Device_type, Device_version
+from  pylivox.control.frame import Frame, Cmd, IsErrorResponse, IsErrorResponseOnly, DeviceType, Device_type, Device_version, support_only
 
 class PowerMode(enum.Enum):
     normal      = 0x01
@@ -161,14 +161,13 @@ class ReadLidarExtrinsicParametersResponse(Lidar, IsErrorResponse):
         is_error, roll, pitch, yaw, x, y, z = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(roll, pitch, yaw, x, y, z, is_error, device_type, device_version)
 
+@support_only([(DeviceType.MID_40, (0,0,0,0))])
 class TurnOnOffRainFogSuppression(Lidar):
     CMD_TYPE = Frame.Type.CMD
     CMD_ID = Frame.SetLidar.TURN_ON_OFF_RAIN_FOG_SUPPRESSION 
     _PACK_FORMAT = '<?' # is_enable
 
     def __init__(self, is_enable:bool, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        if device_type != DeviceType.MID_40:
-            raise Exception('Command not supported by this device')
         super().__init__(device_type, device_version)
         self.is_enable = is_enable
 
@@ -182,13 +181,9 @@ class TurnOnOffRainFogSuppression(Lidar):
         is_enable, = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(is_enable, device_type, device_version)
 
+@support_only([(DeviceType.MID_40, (0,0,0,0))])
 class TurnOnOffRainFogSuppressionResponse(Lidar, IsErrorResponseOnly):
     CMD_ID = Frame.SetLidar.TURN_ON_OFF_RAIN_FOG_SUPPRESSION
-
-    def __init__(self, is_error:bool=False, device_type:DeviceType=Device_type, device_version:'tuple(int,int,int,int)'=Device_version):
-        if device_type != DeviceType.MID_40:
-            raise Exception('Command not supported by this device')
-        super().__init__(is_error, device_type, device_version)
 
 class SetTurnOnOffFan(Lidar):
     CMD_TYPE = Frame.Type.CMD

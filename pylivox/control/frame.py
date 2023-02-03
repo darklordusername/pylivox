@@ -5,6 +5,8 @@ import enum
 import struct
 import abc
 import logging
+import functools
+import inspect
 #libs
 import crcmod
 #projs
@@ -16,6 +18,7 @@ logger = logging.getLogger(__name__)
 
 
 
+
 class DeviceType(enum.Enum):
     HUB      = 0     
     MID_40   = 1 
@@ -23,6 +26,21 @@ class DeviceType(enum.Enum):
     HORIZON  = 3
     MID_70   = 6
     AVIA     = 7
+
+def support_only(devices:'list(tuple(DeviceType, tuple(int,int,int,int)))'):
+    def decorator(cls):
+        old_init= cls.__init__
+        @functools.wraps(old_init, )
+        def __init__(self, *args, device_type=Device_type, device_version=Device_version, **kwargs):
+            # inspect.getargs()
+            # device_type = kwargs.get('device_type', args[-2])
+            # device_version = kwargs.get('device_version', args[-1])
+            if not next((d for d,v in devices if device_type == d and device_version >= v), None):
+                raise Exception(f'Device {device_type} version:{device_version} does not support {self}')
+            old_init(self, *args, **kwargs)
+        cls.__init__ = __init__
+        return cls
+    return decorator
 
 #Global config for current device
 Device_type = DeviceType.MID_40
