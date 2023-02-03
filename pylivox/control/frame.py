@@ -36,8 +36,8 @@ def support_only(devices:'list(tuple(DeviceType, tuple(int,int,int,int)))'):
             b = signature.bind(self, *args, **kwargs)
             b.apply_defaults()
             arguments = b.arguments
-            device_type = arguments['device_type']
-            device_version = arguments['device_version']
+            device_type = arguments['device_type'] or Device_type
+            device_version = arguments['device_version'] or Device_version
             if not next((d for d,v in devices if device_type == d and device_version >= v), None):
                 raise Exception(f'Device {device_type} version:{device_version} does not support {self}')
             old_init(self, *args, **kwargs)
@@ -115,13 +115,13 @@ class Frame(abc.ABC):
     FRAME_MAX_LENGTH = 1400
 
     def __init__(self, 
-                device_type:DeviceType=Device_type, 
-                device_version:'tuple(int,int,int,int)'=Device_version,
+                device_type:DeviceType=None, 
+                device_version:'tuple(int,int,int,int)'=None,
                 seq=0
                 ):
         self.seq = seq
-        self.device_type = device_type
-        self.device_version = device_version
+        self.device_type = device_type or Device_type
+        self.device_version = device_version or Device_version
 
     @property
     def device_version(self)->'tuple(int,int,int,int)':

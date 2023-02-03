@@ -37,7 +37,10 @@ class SetMode(Lidar):
     CMD_ID = Frame.SetLidar.SET_MODE
     _PACK_FORMAT = '<B'  # lidar_mode
 
-    def __init__(self, power_mode: 'PowerMode|int', device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def __init__(self, 
+                power_mode: 'PowerMode|int', 
+                device_type: DeviceType = None, 
+                device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         self.power_mode = power_mode
 
@@ -59,7 +62,7 @@ class SetMode(Lidar):
         return super().cmd_payload(payload_body)
 
     @classmethod
-    def from_payload(cls, payload: bytes, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def from_payload(cls, payload: bytes, device_type = None, device_version = None):
         lidar_mode, = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(lidar_mode, device_type, device_version)
 
@@ -74,7 +77,10 @@ class SetModeResponse(Lidar):
         Fail = 1
         Switching = 2
 
-    def __init__(self, result: 'Result|int', device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def __init__(self, 
+                result: 'Result|int', 
+                device_type: DeviceType = None, 
+                device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         self.result = result
 
@@ -96,7 +102,7 @@ class SetModeResponse(Lidar):
         return super().cmd_payload(payload_body)
 
     @classmethod
-    def from_payload(cls, payload: bytes, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def from_payload(cls, payload: bytes, device_type = None, device_version = None):
         result, = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(result, device_type, device_version)
 
@@ -106,7 +112,15 @@ class WriteLidarExtrinsicParameters(Lidar):
     CMD_ID = Frame.SetLidar.WRITE_LIDAR_EXTRINSIC_PARAMETERS
     _PACK_FORMAT = '<fffIII'  # roll, pitch, yaw, x, y, z
 
-    def __init__(self, roll: float, pitch: float, yaw: float, x: int, y: int, z: int, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def __init__(self, 
+                roll: float, 
+                pitch: float, 
+                yaw: float, 
+                x: int, 
+                y: int, 
+                z: int, 
+                device_type: DeviceType = None, 
+                device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         self.roll = roll
         self.pitch = pitch
@@ -122,7 +136,7 @@ class WriteLidarExtrinsicParameters(Lidar):
         return super().cmd_payload(payload_body)
 
     @classmethod
-    def from_payload(cls, payload: bytes, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def from_payload(cls, payload: bytes, device_type = None, device_version = None):
         roll, pitch, yaw, x, y, z = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(roll, pitch, yaw, x, y, z, device_type, device_version)
 
@@ -149,8 +163,8 @@ class ReadLidarExtrinsicParametersResponse(Lidar, IsErrorResponse):
                  y: int,
                  z: int,
                  is_error: bool = False,
-                 device_type: DeviceType = Device_type,
-                 device_version: 'tuple(int,int,int,int)' = Device_version
+                 device_type: DeviceType = None,
+                 device_version: 'tuple(int,int,int,int)' = None
                  ):
         super().__init__(device_type, device_version)
         self.is_error = is_error
@@ -168,7 +182,7 @@ class ReadLidarExtrinsicParametersResponse(Lidar, IsErrorResponse):
         return super().cmd_payload(payload_body)
 
     @classmethod
-    def from_payload(cls, payload: bytes, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def from_payload(cls, payload: bytes, device_type = None, device_version = None):
         is_error, roll, pitch, yaw, x, y, z = struct.unpack(
             cls._PACK_FORMAT, payload)
         return cls(roll, pitch, yaw, x, y, z, is_error, device_type, device_version)
@@ -180,7 +194,10 @@ class TurnOnOffRainFogSuppression(Lidar):
     CMD_ID = Frame.SetLidar.TURN_ON_OFF_RAIN_FOG_SUPPRESSION
     _PACK_FORMAT = '<?'  # is_enable
 
-    def __init__(self, is_enable: bool, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def __init__(self, 
+                is_enable: bool, 
+                device_type: DeviceType = None, 
+                device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         self.is_enable = is_enable
 
@@ -190,7 +207,7 @@ class TurnOnOffRainFogSuppression(Lidar):
         return super().cmd_payload(payload_body)
 
     @classmethod
-    def from_payload(cls, payload: bytes, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def from_payload(cls, payload: bytes, device_type = None, device_version = None):
         is_enable, = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(is_enable, device_type, device_version)
 
@@ -210,7 +227,10 @@ class SetTurnOnOffFan(Lidar):
     CMD_ID = Frame.SetLidar.SET_TURN_ON_OFF_FAN
     _PACK_FORMAT = '<?'  # is_enable
 
-    def __init__(self, is_enable: bool, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def __init__(self,
+                is_enable: bool, 
+                device_type: DeviceType = None, 
+                device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         self.is_enable = is_enable
 
@@ -220,7 +240,7 @@ class SetTurnOnOffFan(Lidar):
         return super().cmd_payload(payload_body)
 
     @classmethod
-    def from_payload(cls, payload: bytes, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def from_payload(cls, payload: bytes, device_type = None, device_version = None):
         is_enable, = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(is_enable, device_type, device_version)
 
@@ -254,7 +274,11 @@ class GetTurnOnOffFanStateResponse(Lidar, IsErrorResponse):
     CMD_ID = Frame.SetLidar.GET_TURN_ON_OFF_FAN_STATE
     _PACK_FORMAT = '<??'  # is_error, state
 
-    def __init__(self, state: bool, is_error: bool = False, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def __init__(self, 
+                state: bool, 
+                is_error: bool = False, 
+                device_type: DeviceType = None, 
+                device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         self.is_error = is_error
         self.state = state
@@ -266,7 +290,7 @@ class GetTurnOnOffFanStateResponse(Lidar, IsErrorResponse):
         return super().cmd_payload(payload_body)
 
     @classmethod
-    def from_payload(cls, payload: bytes, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def from_payload(cls, payload: bytes, device_type = None, device_version = None):
         is_error, state = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(state, is_error, device_type, device_version)
 
@@ -282,7 +306,10 @@ class SetLidarReturnMode(Lidar):
     CMD_ID = Frame.SetLidar.SET_LIDAR_RETURN_MODE
     _PACK_FORMAT = '<B'  # return_mode
 
-    def __init__(self, return_mode: 'ReturnMode|int', device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def __init__(self, 
+                return_mode: 'ReturnMode|int', 
+                device_type: DeviceType = None, 
+                device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         self.return_mode = return_mode
 
@@ -304,7 +331,7 @@ class SetLidarReturnMode(Lidar):
         return super().cmd_payload(payload_body)
 
     @classmethod
-    def from_payload(cls, payload: bytes, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def from_payload(cls, payload: bytes, device_type = None, device_version = None):
         return_mode, = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(return_mode, device_type, device_version)
 
@@ -340,7 +367,11 @@ class GetLidarReturnModeResponse(Lidar, IsErrorResponse):
     CMD_ID = Frame.SetLidar.GET_LIDAR_RETURN_MODE
     _PACK_FORMAT = '<?B'  # is_error, return_mode
 
-    def __init__(self, return_mode: 'ReturnMode|int', is_error: bool = False, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def __init__(self, 
+                return_mode: 'ReturnMode|int', 
+                is_error: bool = False, 
+                device_type: DeviceType = None, 
+                device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         self.result = is_error
         self.return_mode = return_mode
@@ -364,7 +395,7 @@ class GetLidarReturnModeResponse(Lidar, IsErrorResponse):
         return super().cmd_payload(payload_body)
 
     @classmethod
-    def from_payload(cls, payload: bytes, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def from_payload(cls, payload: bytes, device_type = None, device_version = None):
         is_error, return_mode = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(return_mode, is_error, device_type, device_version)
 
@@ -379,7 +410,10 @@ class SetImuDataPushFrequency(Lidar):
     CMD_ID = Frame.SetLidar.SET_IMU_DATA_PUSH_FREQUENCY
     _PACK_FORMAT = '<B'  # frequency
 
-    def __init__(self, frequency: 'PushFrequency|int', device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def __init__(self, 
+                frequency: 'PushFrequency|int', 
+                device_type: DeviceType = None, 
+                device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         self.frequency = frequency
 
@@ -401,7 +435,7 @@ class SetImuDataPushFrequency(Lidar):
         return super().cmd_payload(payload_body)
 
     @classmethod
-    def from_payload(cls, payload: bytes, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def from_payload(cls, payload: bytes, device_type = None, device_version = None):
         frequency, = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(frequency, device_type, device_version)
 
@@ -434,7 +468,11 @@ class GetImuDataPushFrequencyResponse(Lidar, IsErrorResponse):
     CMD_ID = Frame.SetLidar.GET_IMU_DATA_PUSH_FREQUENCY
     _PACK_FORMAT = '<?B'  # is_error, frequency
 
-    def __init__(self, frequency: 'PushFrequency|int', is_error: bool = False, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def __init__(self, 
+                frequency: 'PushFrequency|int', 
+                is_error: bool = False, 
+                device_type: DeviceType = None, 
+                device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         self.is_error = is_error
         self.frequency = frequency
@@ -458,7 +496,7 @@ class GetImuDataPushFrequencyResponse(Lidar, IsErrorResponse):
         return super().cmd_payload(payload_body)
 
     @classmethod
-    def from_payload(cls, payload: bytes, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def from_payload(cls, payload: bytes, device_type = None, device_version = None):
         is_error, frequency = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(frequency, is_error, device_type, device_version)
 
@@ -474,7 +512,14 @@ class UpdateUtcSynchronizationTime(Lidar):
     CMD_ID = Frame.SetLidar.UPDATE_UTC_SYNCHRONIZATION_TIME
     _PACK_FORMAT = '<BBBBI'  # year, month, day, hour, microseconds
 
-    def __init__(self, year: int, month: int, day: int, hour: int, microseconds: int, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def __init__(self, 
+                year: int, 
+                month: int, 
+                day: int, 
+                hour: int, 
+                microseconds: int, 
+                device_type: DeviceType = None, 
+                device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         datetime(year, month, day, hour)
         self.year = year
@@ -490,7 +535,7 @@ class UpdateUtcSynchronizationTime(Lidar):
         return super().cmd_payload(payload_body)
 
     @classmethod
-    def from_payload(cls, payload: bytes, device_type: DeviceType = Device_type, device_version: 'tuple(int,int,int,int)' = Device_version):
+    def from_payload(cls, payload: bytes, device_type = None, device_version = None):
         year, month, day, hour, us = struct.unpack(cls._PACK_FORMAT, payload)
         return cls(year, month, day, hour, us, device_type, device_version)
 
