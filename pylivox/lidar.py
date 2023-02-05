@@ -70,7 +70,7 @@ class Lidar:
                 self.heartbeat_time = time.time()
                 frame = FrameFrom(data)
                 if type(frame) is not general.Heartbeat:
-                    logger.info(f'<< {addr} {frame}')
+                    logger.debug(f'<< {addr} {frame}')
                 handler = self.HANDLERS[type(frame)]
                 akn = handler(self, frame)
                 if akn: 
@@ -95,8 +95,9 @@ class Lidar:
                         self.sampling = False
                     if self.sampling:
                         time_start = time.time()
-                        for i in range(100):
-                            self.s.sendto(DataFrame().frame, (str(self.master.ip), self.master.point_port))
+                        frame = DataFrame().frame
+                        for i in range(1000):
+                            self.s.sendto(frame, (str(self.master.ip), self.master.point_port))
                         sleep_time = time_start+1 - time.time()
                         sleep_time = sleep_time if sleep_time > 0 else 0
                 except Exception as e:
