@@ -1,4 +1,5 @@
 import time
+import os
 import struct
 from enum import Enum
 #proj
@@ -70,7 +71,7 @@ class Frame:
 
     @property
     def header(self)->bytes:
-        return struct.pack('<BBBIBBQ', #protocol version, slot_id,lidar_id,reserved,status_code,time_type,data_type,time, 
+        return struct.pack('<BBBxIBBQ', #protocol version, slot_id,lidar_id,reserved,status_code,time_type,data_type,time, 
                             self.PROTOCOL_VERSION,
                             self.SLOT_ID,
                             self.LIDAR_ID,
@@ -83,7 +84,8 @@ class Frame:
     @property
     def payload(self):
         n = struct.calcsize(DataType0._PACK_FORMAT)
-        return bytes(n)*100
+        # return bytes(n)*100
+        return os.urandom(n*100)
 
     @property
     def frame(self)->bytes:

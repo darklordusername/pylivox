@@ -31,13 +31,13 @@ class Lidar:
         self.is_spherical = False
         self.rain_fog_suppression = False
         self.fan = False
-        self.return_mode = lidar.ReturnMode.DUAL_RETURN
+        self.return_mode = lidar.ReturnMode.SINGLE_RETURN_FIRST
         self.imu_data_push_freq = lidar.PushFrequency.FREQ_0HZ
         self.extrinsic_parameters = lidar.ReadLidarExtrinsicParametersResponse(0.0, 0.0, 0.0, 0, 0, 0)
         self.heartbeat_time = time.time() - 5
         self.is_connected = False
         self.sampling = False
-        self.state:general.WorkState.Lidar = general.WorkState.Lidar.Standby
+        self.state:general.WorkState.Lidar = general.WorkState.Lidar.Normal
         self.seq = 0
         self.s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.s.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
@@ -69,7 +69,8 @@ class Lidar:
                 data, addr = self.s.recvfrom(1500)
                 self.heartbeat_time = time.time()
                 frame = FrameFrom(data)
-                logger.info(f'<< {addr} {frame}')
+                if type(frame) is not general.Heartbeat:
+                    logger.info(f'<< {addr} {frame}')
                 handler = self.HANDLERS[type(frame)]
                 akn = handler(self, frame)
                 if akn: 
@@ -85,21 +86,29 @@ class Lidar:
 
     def _data_tx(self):
         def f():
+            # s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            # s.bind(('0.0.0.0', 37777))
+            sleep_time = 0.1
             while True:
                 try:
                     if not self.is_connected:
                         self.sampling = False
                     if self.sampling:
+                        time_start = time.time()
                         for i in range(100):
                             self.s.sendto(DataFrame().frame, (str(self.master.ip), self.master.point_port))
+                        sleep_time = time_start+1 - time.time()
+                        sleep_time = sleep_time if sleep_time > 0 else 0
                 except Exception as e:
                     logger.exception(e)
-                time.sleep(1)
+                    sleep_time = 0.1
+                time.sleep(sleep_time)
         self._data_tx_thread = threading.Thread(target=f, name='data_tx', daemon=True)
         self._data_tx_thread.start()
 
     def send(self, frame:Frame):
-        logger.debug(f'>> {frame}')
+        if type(frame) is not general.HeartbeatResponse:
+            logger.debug(f'>> {frame}')
         self.s.sendto(frame.frame, (str(self.master.ip), self.master.cmd_port))
 
       
@@ -123,7 +132,8 @@ class Lidar:
     def onStartStopSampling(self, req: general.StartStopSampling):
         logger.debug(f'sampling: {self.sampling}->{req.is_start}')
         self.sampling = req.is_start
-        self.state:general.WorkState.Lidar = general.WorkState.Lidar.Normal if self.sampling else general.WorkState.Lidar.Standby
+        # self.state = general.WorkState.Lidar.Normal if self.sampling else general.WorkState.Lidar.Standby
+        logger.debug(f'state:{self.state}')
         return general.StartStopSamplingResponse()
     def onChangeCoordinateSystem(self, req: general.ChangeCoordinateSystem):
         self.is_spherical = req.is_spherical
