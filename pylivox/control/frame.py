@@ -253,6 +253,9 @@ class IsErrorResponseOnly(IsErrorResponse):
         super().__init__(device_type, device_version)
         self.is_error = is_error
 
+    def __repr__(self):
+        return f'{{{type(self)} is_error:{self.is_error}}}'
+
     @property
     def payload(self)->bytes:
         payload_body = struct.pack(self._PACK_FORMAT, self.is_error)

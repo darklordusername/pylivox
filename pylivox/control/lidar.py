@@ -44,6 +44,9 @@ class SetMode(Lidar):
         super().__init__(device_type, device_version)
         self.power_mode = power_mode
 
+    def __repr__(self):
+        return f'{{{type(self)} mode:{self.power_mode}}}'
+
     @property
     def power_mode(self) -> PowerMode:
         return self._power_mode
@@ -83,6 +86,9 @@ class SetModeResponse(Lidar):
                 device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         self.result = result
+
+    def __repr__(self):
+        return f'{{{type(self)} result:{self.result}}}'
 
     @property
     def result(self) -> Result:
@@ -128,6 +134,9 @@ class WriteLidarExtrinsicParameters(Lidar):
         self.x = x
         self.y = y
         self.z = z
+
+    def __repr__(self):
+        return f'{{{type(self)} roll:{self.roll} pitch:{self.pitch} yaw:{self.yaw} x:{self.x} y:{self.y} z:{self.z}}}'
 
     @property
     def payload(self) -> bytes:
@@ -175,6 +184,10 @@ class ReadLidarExtrinsicParametersResponse(Lidar, IsErrorResponse):
         self.y = y
         self.z = z
 
+    def __repr__(self):
+        return f'{{{type(self)} error:{self._is_error} roll:{self.roll} pitch:{self.pitch} yaw:{self.yaw} x:{self.x} y:{self.y} z:{self.z}}}'
+
+
     @property
     def payload(self) -> bytes:
         payload_body = struct.pack(self._PACK_FORMAT, self.is_error,
@@ -200,6 +213,9 @@ class TurnOnOffRainFogSuppression(Lidar):
                 device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         self.is_enable = is_enable
+
+    def __repr__(self):
+        return f'{{{type(self)} enable:{self.is_enable}}}'
 
     @property
     def payload(self) -> bytes:
@@ -233,6 +249,9 @@ class SetTurnOnOffFan(Lidar):
                 device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         self.is_enable = is_enable
+
+    def __repr__(self):
+        return f'{{{type(self)} enable:{self.is_enable}}}'
 
     @property
     def payload(self) -> bytes:
@@ -283,6 +302,9 @@ class GetTurnOnOffFanStateResponse(Lidar, IsErrorResponse):
         self.is_error = is_error
         self.state = state
 
+    def __repr__(self):
+        return f'{{{type(self)} error:{self.is_error} state:{self.state}}}'
+
     @property
     def payload(self) -> bytes:
         payload_body = struct.pack(
@@ -312,6 +334,9 @@ class SetLidarReturnMode(Lidar):
                 device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         self.return_mode = return_mode
+
+    def __repr__(self):
+        return f'{{{type(self)} mode:{self.return_mode}}}'
 
     @property
     def return_mode(self) -> ReturnMode:
@@ -373,8 +398,11 @@ class GetLidarReturnModeResponse(Lidar, IsErrorResponse):
                 device_type: DeviceType = None, 
                 device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
-        self.result = is_error
+        self.is_error = is_error
         self.return_mode = return_mode
+
+    def __repr__(self):
+        return f'{{{type(self)} error:{self.is_error} return_mode:{self.return_mode}}}'
 
     @property
     def return_mode(self) -> ReturnMode:
@@ -391,7 +419,7 @@ class GetLidarReturnModeResponse(Lidar, IsErrorResponse):
     @property
     def payload(self) -> bytes:
         payload_body = struct.pack(
-            self._PACK_FORMAT, self.result, self.return_mode.value)
+            self._PACK_FORMAT, self.is_error, self.return_mode.value)
         return super().cmd_payload(payload_body)
 
     @classmethod
@@ -416,6 +444,9 @@ class SetImuDataPushFrequency(Lidar):
                 device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         self.frequency = frequency
+
+    def __repr__(self):
+        return f'{{{type(self)} freq:{self.frequency}}}'
 
     @property
     def frequency(self) -> PushFrequency:
@@ -476,6 +507,9 @@ class GetImuDataPushFrequencyResponse(Lidar, IsErrorResponse):
         super().__init__(device_type, device_version)
         self.is_error = is_error
         self.frequency = frequency
+
+    def __repr__(self):
+        return f'{{{type(self)} error:{self.is_error} freq:{self.frequency}}}'
 
     @property
     def frequency(self) -> PushFrequency:

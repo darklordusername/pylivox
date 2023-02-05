@@ -98,6 +98,9 @@ class BroadcastMsg(General):
         self.broadcast = broadcast
         self.dev_type = device_type
 
+    def __repr__(self):
+        return f'{{{self.__class__} serial:{self._broadcast.serial} device{self.dev_type} }}'
+
     @property
     def broadcast(self) -> Broadcast:
         return self._broadcast
@@ -156,6 +159,9 @@ class Handshake(General):
         self.point_port = point_port
         self.cmd_port = cmd_port
         self.imu_port = imu_port
+
+    def __repr__(self):
+        return f'{{{type(self)} ip:{self.ip} point_port:{self.point_port} cmd_port:{self.cmd_port} imu_port:{self.imu_port}}}'
 
     @property
     def payload(self):
@@ -247,6 +253,9 @@ class HeartbeatResponse(General, IsErrorResponse):
         self.feature_msg = feature_msg
         self.ack_msg = ack_msg
 
+    def __repr__(self):
+        return f'{{{type(self)} error{self.is_error} work_state{self.work_state} feature_msg{self.feature_msg} ack_msg{self.ack_msg}}}'
+
     @property
     def work_state(self) -> int:
         return self._work_state.value
@@ -302,6 +311,9 @@ class StartStopSampling(General):
         super().__init__(device_type, device_version)
         self.is_start = is_start
 
+    def __repr__(self):
+        return f'{{{type(self)} is_start:{self.is_start}}}'
+
     @property
     def is_start(self) -> bool:
         return self._is_start
@@ -339,6 +351,9 @@ class ChangeCoordinateSystem(General):
                 device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         self.is_spherical = is_spherical
+
+    def __repr__(self):
+        return f'{{{type(self)} spherical:{self._is_spherical}}}'
 
     @property
     def is_spherical(self) -> bool:
@@ -426,6 +441,9 @@ class ConfigureStaticDynamicIp(General):
         self.ip = ip
         self.mask = mask
         self.gw = gw
+
+    def __repr__(self):
+        return f'{{{type(self)} static:{self.is_static} ip:{self.ip} mask:{self.mask} gw:{self.gw}}}'
 
     @property
     def is_static(self) -> bool:
@@ -526,6 +544,9 @@ class GetDeviceIpInformationResponse(ConfigureStaticDynamicIp, IsErrorResponse):
         super().__init__(is_static, ip, mask, gw, device_type, device_version)
         self.is_error = is_error
 
+    def __repr__(self):
+        return f'{{{type(self)} error:{self.is_error} static:{self.is_static} ip:{self.ip} mask{self.mask} gw:{self.gw}}}'
+
     @property
     def payload(self) -> bytes:
         if ((self.device_type == DeviceType.HORIZON and self.device_version >= (6, 4, 0, 0)) or
@@ -574,6 +595,9 @@ class RebootDevice(General):
                 device_version: 'tuple(int,int,int,int)' = None):
         super().__init__(device_type, device_version)
         self.timeout = timeout
+
+    def __repr__(self):
+        return f'{{{type(self)} timeout:{self.timeout} }}'
 
     @property
     def timeout(self) -> int:
