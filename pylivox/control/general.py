@@ -161,7 +161,7 @@ class Handshake(General):
         self.imu_port = imu_port
 
     def __repr__(self):
-        return f'{{{type(self)} ip:{self.ip} point_port:{self.point_port} cmd_port:{self.cmd_port} imu_port:{self.imu_port}}}'
+        return f'{{{type(self).__name__} ip:{self.ip} point_port:{self.point_port} cmd_port:{self.cmd_port} imu_port:{self.imu_port}}}'
 
     @property
     def payload(self):
@@ -254,7 +254,7 @@ class HeartbeatResponse(General, IsErrorResponse):
         self.ack_msg = ack_msg
 
     def __repr__(self):
-        return f'{{{type(self)} error{self.is_error} work_state{self.work_state} feature_msg{self.feature_msg} ack_msg{self.ack_msg}}}'
+        return f'{{{type(self).__name__} error{self.is_error} work_state{self.work_state} feature_msg{self.feature_msg} ack_msg{self.ack_msg}}}'
 
     @property
     def work_state(self) -> int:
@@ -312,7 +312,7 @@ class StartStopSampling(General):
         self.is_start = is_start
 
     def __repr__(self):
-        return f'{{{type(self)} is_start:{self.is_start}}}'
+        return f'{{{type(self).__name__} is_start:{self.is_start}}}'
 
     @property
     def is_start(self) -> bool:
@@ -353,7 +353,7 @@ class ChangeCoordinateSystem(General):
         self.is_spherical = is_spherical
 
     def __repr__(self):
-        return f'{{{type(self)} spherical:{self._is_spherical}}}'
+        return f'{{{type(self).__name__} spherical:{self._is_spherical}}}'
 
     @property
     def is_spherical(self) -> bool:
@@ -443,7 +443,7 @@ class ConfigureStaticDynamicIp(General):
         self.gw = gw
 
     def __repr__(self):
-        return f'{{{type(self)} static:{self.is_static} ip:{self.ip} mask:{self.mask} gw:{self.gw}}}'
+        return f'{{{type(self).__name__} static:{self.is_static} ip:{self.ip} mask:{self.mask} gw:{self.gw}}}'
 
     @property
     def is_static(self) -> bool:
@@ -545,7 +545,7 @@ class GetDeviceIpInformationResponse(ConfigureStaticDynamicIp, IsErrorResponse):
         self.is_error = is_error
 
     def __repr__(self):
-        return f'{{{type(self)} error:{self.is_error} static:{self.is_static} ip:{self.ip} mask{self.mask} gw:{self.gw}}}'
+        return f'{{{type(self).__name__} error:{self.is_error} static:{self.is_static} ip:{self.ip} mask{self.mask} gw:{self.gw}}}'
 
     @property
     def payload(self) -> bytes:
@@ -597,7 +597,7 @@ class RebootDevice(General):
         self.timeout = timeout
 
     def __repr__(self):
-        return f'{{{type(self)} timeout:{self.timeout} }}'
+        return f'{{{type(self).__name__} timeout:{self.timeout} }}'
 
     @property
     def timeout(self) -> int:

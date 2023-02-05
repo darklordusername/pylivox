@@ -254,7 +254,7 @@ class IsErrorResponseOnly(IsErrorResponse):
         self.is_error = is_error
 
     def __repr__(self):
-        return f'{{{type(self)} is_error:{self.is_error}}}'
+        return f'{{{type(self).__name__} is_error:{self.is_error}}}'
 
     @property
     def payload(self)->bytes:

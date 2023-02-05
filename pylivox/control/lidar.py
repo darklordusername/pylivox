@@ -45,7 +45,7 @@ class SetMode(Lidar):
         self.power_mode = power_mode
 
     def __repr__(self):
-        return f'{{{type(self)} mode:{self.power_mode}}}'
+        return f'{{{type(self).__name__} mode:{self.power_mode}}}'
 
     @property
     def power_mode(self) -> PowerMode:
@@ -88,7 +88,7 @@ class SetModeResponse(Lidar):
         self.result = result
 
     def __repr__(self):
-        return f'{{{type(self)} result:{self.result}}}'
+        return f'{{{type(self).__name__} result:{self.result}}}'
 
     @property
     def result(self) -> Result:
@@ -136,7 +136,7 @@ class WriteLidarExtrinsicParameters(Lidar):
         self.z = z
 
     def __repr__(self):
-        return f'{{{type(self)} roll:{self.roll} pitch:{self.pitch} yaw:{self.yaw} x:{self.x} y:{self.y} z:{self.z}}}'
+        return f'{{{type(self).__name__} roll:{self.roll} pitch:{self.pitch} yaw:{self.yaw} x:{self.x} y:{self.y} z:{self.z}}}'
 
     @property
     def payload(self) -> bytes:
@@ -185,7 +185,7 @@ class ReadLidarExtrinsicParametersResponse(Lidar, IsErrorResponse):
         self.z = z
 
     def __repr__(self):
-        return f'{{{type(self)} error:{self._is_error} roll:{self.roll} pitch:{self.pitch} yaw:{self.yaw} x:{self.x} y:{self.y} z:{self.z}}}'
+        return f'{{{type(self).__name__} error:{self._is_error} roll:{self.roll} pitch:{self.pitch} yaw:{self.yaw} x:{self.x} y:{self.y} z:{self.z}}}'
 
 
     @property
@@ -215,7 +215,7 @@ class TurnOnOffRainFogSuppression(Lidar):
         self.is_enable = is_enable
 
     def __repr__(self):
-        return f'{{{type(self)} enable:{self.is_enable}}}'
+        return f'{{{type(self).__name__} enable:{self.is_enable}}}'
 
     @property
     def payload(self) -> bytes:
@@ -251,7 +251,7 @@ class SetTurnOnOffFan(Lidar):
         self.is_enable = is_enable
 
     def __repr__(self):
-        return f'{{{type(self)} enable:{self.is_enable}}}'
+        return f'{{{type(self).__name__} enable:{self.is_enable}}}'
 
     @property
     def payload(self) -> bytes:
@@ -303,7 +303,7 @@ class GetTurnOnOffFanStateResponse(Lidar, IsErrorResponse):
         self.state = state
 
     def __repr__(self):
-        return f'{{{type(self)} error:{self.is_error} state:{self.state}}}'
+        return f'{{{type(self).__name__} error:{self.is_error} state:{self.state}}}'
 
     @property
     def payload(self) -> bytes:
@@ -336,7 +336,7 @@ class SetLidarReturnMode(Lidar):
         self.return_mode = return_mode
 
     def __repr__(self):
-        return f'{{{type(self)} mode:{self.return_mode}}}'
+        return f'{{{type(self).__name__} mode:{self.return_mode}}}'
 
     @property
     def return_mode(self) -> ReturnMode:
@@ -402,7 +402,7 @@ class GetLidarReturnModeResponse(Lidar, IsErrorResponse):
         self.return_mode = return_mode
 
     def __repr__(self):
-        return f'{{{type(self)} error:{self.is_error} return_mode:{self.return_mode}}}'
+        return f'{{{type(self).__name__} error:{self.is_error} return_mode:{self.return_mode}}}'
 
     @property
     def return_mode(self) -> ReturnMode:
@@ -446,7 +446,7 @@ class SetImuDataPushFrequency(Lidar):
         self.frequency = frequency
 
     def __repr__(self):
-        return f'{{{type(self)} freq:{self.frequency}}}'
+        return f'{{{type(self).__name__} freq:{self.frequency}}}'
 
     @property
     def frequency(self) -> PushFrequency:
@@ -509,7 +509,7 @@ class GetImuDataPushFrequencyResponse(Lidar, IsErrorResponse):
         self.frequency = frequency
 
     def __repr__(self):
-        return f'{{{type(self)} error:{self.is_error} freq:{self.frequency}}}'
+        return f'{{{type(self).__name__} error:{self.is_error} freq:{self.frequency}}}'
 
     @property
     def frequency(self) -> PushFrequency:
