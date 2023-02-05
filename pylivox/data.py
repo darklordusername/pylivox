@@ -77,7 +77,7 @@ class Frame:
                             0, #status code
                             LidarStatus.TimeSync.NO_TIME_SYNC.value,
                             0, #datatype 
-                            int(time.time() * 1000000),
+                            int(time.time() * 1000000000),
                             )
 
     @property
