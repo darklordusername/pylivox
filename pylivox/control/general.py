@@ -825,6 +825,9 @@ class ReadConfigurationParameters(General):
         self.keys_quantity = keys_quantity
         self.keys = keys
 
+    def __repr__(self):
+        return f'{{{type(self).__name__} [{self.keys}]}}'
+
     @property
     def keys_quantity(self) -> int:
         return self._keys_quantity
@@ -884,6 +887,9 @@ class ReadConfigurationParametersResponse(General, IsErrorResponse):
         self.error_key = error_key
         self.error_code = error_code
         self.param_list = param_list
+
+    def __repr__(self):
+        return f'{{{type(self).__name__} error:{self.is_error} error_key{self.error_key} error_code{self.error_code} params:{self.param_list}}}'
 
     @property
     def error_code(self) -> ConfigurationParameter.ErrorCode:
