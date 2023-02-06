@@ -83,15 +83,15 @@ class Lidar:
             except socket.timeout:
                 pass
             except KeyError as e:
-                logger.warning(f'Unknown frame {data.hex()} cmd_set:{data[-6]} cmd_id:{data[-5]}')
+                logger.warning(f'Unknown frame cmd type,set,id:{e}')
             except Exception as e:
                 logger.exception(e)
             time.sleep(1)
 
     def _data_tx(self):
         def f():
-            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            s.bind(('0.0.0.0', 37777))
+            # s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            # s.bind(('0.0.0.0', 37777))
             sleep_time = 0.1
             while True:
                 try:
@@ -101,7 +101,7 @@ class Lidar:
                         time_start = time.time()
                         frame = DataFrame().frame
                         for i in range(1000):
-                            s.sendto(frame, (str(self.master.ip), self.master.point_port))
+                            self.s.sendto(frame, (str(self.master.ip), self.master.point_port))
                         sleep_time = time_start+1 - time.time()
                         sleep_time = sleep_time if sleep_time > 0 else 0
                 except Exception as e:
