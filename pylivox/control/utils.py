@@ -80,4 +80,4 @@ def FrameFrom(frame:bytes,
     assert start == Frame.START
     assert version == Frame.VERSION
     T = TypeDict[cmd_set, cmd_type, cmd_id]
-    return T.from_payload(frame_payload, device_type, device_version)
+    return T.from_payload(frame_payload, seq, device_type, device_version)

@@ -144,9 +144,9 @@ class Frame(abc.ABC):
     FRAME_MAX_LENGTH = 1400
 
     def __init__(self, 
+                seq:int,
                 device_type:DeviceType=None, 
                 device_version:'tuple(int,int,int,int)'=None,
-                seq=0
                 ):
         self.seq = seq
         self.device_type = device_type or get_default_device_type()
@@ -238,8 +238,8 @@ class Cmd(Frame):
         return self.cmd_payload(b'')
 
     @classmethod
-    def from_payload(cls, *args, **kwargs):
-        return cls()
+    def from_payload(cls, payload:bytes, seq:int, *args, **kwargs):
+        return cls(seq)
 
 class IsErrorResponse(Cmd):
     CMD_TYPE = Frame.Type.AKN
@@ -258,8 +258,8 @@ class IsErrorResponse(Cmd):
 
 class IsErrorResponseOnly(IsErrorResponse): 
 
-    def __init__(self, is_error:bool=False, device_type:DeviceType=None, device_version:'tuple(int,int,int,int)'=None):
-        super().__init__(device_type, device_version)
+    def __init__(self, seq:int, is_error:bool=False, device_type:DeviceType=None, device_version:'tuple(int,int,int,int)'=None):
+        super().__init__(seq, device_type, device_version)
         self.is_error = is_error
 
     def __repr__(self):
@@ -271,7 +271,7 @@ class IsErrorResponseOnly(IsErrorResponse):
         return super().cmd_payload(payload_body)
 
     @classmethod
-    def from_payload(cls, payload:bytes, device_type=None, device_version=None):
+    def from_payload(cls, payload:bytes, seq, device_type=None, device_version=None):
         is_error, = struct.unpack(cls._PACK_FORMAT, payload)
-        return cls(is_error, device_type, device_version)
+        return cls(seq, is_error, device_type, device_version)
 
