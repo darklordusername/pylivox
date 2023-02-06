@@ -39,27 +39,35 @@ class LidarStatus:
 
 
 class DataType0:
+    TYPE = 0
     _PACK_FORMAT = '<IIIB' #X, Y, Z, reflectivity
 
 class DataType1:
+    TYPE = 1
     _PACK_FORMAT = '<IHHB' #Depth, Zenith angle, Azimuth, reflectivity
 
 class DataType2:
+    TYPE = 2
     _PACK_FORMAT = '<IIIBB' #X, Y, Z, reflectivity, tag
 
 class DataType3:
+    TYPE = 3
     _PACK_FORMAT = '<IHHBB' #Depth, Zenith angle, Azimuth, reflectivity, tag
 
 class DataType4:
+    TYPE = 4
     _PACK_FORMAT = '<IIIB' #X, Y, Z, reflectivity
 
 class DataType5:
+    TYPE = 5
     _PACK_FORMAT = '<IIIB' #X, Y, Z, reflectivity
 
 class DataType6:
+    TYPE = 6
     _PACK_FORMAT = '<IIIB' #X, Y, Z, reflectivity
 
 class DataType7:
+    TYPE = 7
     _PACK_FORMAT = '<IIIB' #X, Y, Z, reflectivity
 
 
@@ -68,6 +76,7 @@ class Frame:
     PROTOCOL_VERSION = 5
     SLOT_ID = 1
     LIDAR_ID = 1
+    DATA = DataType3()
 
     @property
     def header(self)->bytes:
@@ -77,13 +86,13 @@ class Frame:
                             self.LIDAR_ID,
                             0, #status code
                             LidarStatus.TimeSync.NO_TIME_SYNC.value,
-                            0, #datatype 
+                            self.DATA.TYPE, #datatype 
                             int(time.time() * 1000000000),
                             )
 
     @property
     def payload(self):
-        n = struct.calcsize(DataType0._PACK_FORMAT)
+        n = struct.calcsize(self.DATA._PACK_FORMAT)
         # return bytes(n)*100
         return os.urandom(n*100)
 
