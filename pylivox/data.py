@@ -41,35 +41,42 @@ class LidarStatus:
 class DataType0:
     TYPE = 0
     _PACK_FORMAT = '<IIIB' #X, Y, Z, reflectivity
+    N = 100
 
 class DataType1:
     TYPE = 1
     _PACK_FORMAT = '<IHHB' #Depth, Zenith angle, Azimuth, reflectivity
+    N = 100
 
 class DataType2:
     TYPE = 2
     _PACK_FORMAT = '<IIIBB' #X, Y, Z, reflectivity, tag
+    N = 96
 
 class DataType3:
     TYPE = 3
     _PACK_FORMAT = '<IHHBB' #Depth, Zenith angle, Azimuth, reflectivity, tag
+    N = 96
 
-class DataType4:
-    TYPE = 4
-    _PACK_FORMAT = '<IIIB' #X, Y, Z, reflectivity
+# class DataType4:
+#     TYPE = 4
+#     _PACK_FORMAT = '<IIIB' #X, Y, Z, reflectivity
+#     N = 48
 
-class DataType5:
-    TYPE = 5
-    _PACK_FORMAT = '<IIIB' #X, Y, Z, reflectivity
+# class DataType5:
+#     TYPE = 5
+#     _PACK_FORMAT = '<IIIB' #X, Y, Z, reflectivity
+#     N = 48
 
-class DataType6:
-    TYPE = 6
-    _PACK_FORMAT = '<IIIB' #X, Y, Z, reflectivity
+# class DataType6:
+#     TYPE = 6
+#     _PACK_FORMAT = '<IIIB' #X, Y, Z, reflectivity
+#     N = 1
 
-class DataType7:
-    TYPE = 7
-    _PACK_FORMAT = '<IIIB' #X, Y, Z, reflectivity
-
+# class DataType7:
+#     TYPE = 7
+#     _PACK_FORMAT = '<IIIB' #X, Y, Z, reflectivity
+#     N = 30
 
 
 class Frame:
@@ -92,9 +99,8 @@ class Frame:
 
     @property
     def payload(self):
-        n = struct.calcsize(self.DATA._PACK_FORMAT)
-        # return bytes(n)*100
-        return os.urandom(n*100)
+        length = struct.calcsize(self.DATA._PACK_FORMAT)
+        return os.urandom(length * self.DATA.N)
 
     @property
     def frame(self)->bytes:
