@@ -254,7 +254,7 @@ class HeartbeatResponse(General, IsErrorResponse):
         self.ack_msg = ack_msg
 
     def __repr__(self):
-        return f'{{{type(self).__name__} error{self.is_error} work_state{self.work_state} feature_msg{self.feature_msg} ack_msg{self.ack_msg}}}'
+        return f'{{{type(self).__name__} error:{self.is_error} work_state:{self.work_state} feature_msg:{self.feature_msg} ack_msg{self.ack_msg}}}'
 
     @property
     def work_state(self) -> int:
