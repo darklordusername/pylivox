@@ -32,7 +32,11 @@ class Lidar:
         self.rain_fog_suppression = False
         self.fan = False
         self.return_mode = lidar.ReturnMode.SINGLE_RETURN_FIRST
-        self.imu_data_push_freq = lidar.PushFrequency.FREQ_0HZ
+        self.imu_data_push_freq = lidar.PushFrequency.FREQ_200HZ
+        self.config_parameters = {general.ConfigurationParameter.Key.SWITCH_REPETITIVE_NON_REPETITIVE_SCANNING_PATTERN: False, 
+                                    general.ConfigurationParameter.Key.SLOT_ID_CONFIGURATION: 0,
+                                    general.ConfigurationParameter.Key.HIGH_SENSITIVITY_FUNCTION: False
+        }
         self.extrinsic_parameters = lidar.ReadLidarExtrinsicParametersResponse(0.0, 0.0, 0.0, 0, 0, 0)
         self.heartbeat_time = time.time() - 5
         self.is_connected = False
@@ -86,8 +90,8 @@ class Lidar:
 
     def _data_tx(self):
         def f():
-            # s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            # s.bind(('0.0.0.0', 37777))
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.bind(('0.0.0.0', 37777))
             sleep_time = 0.1
             while True:
                 try:
@@ -97,7 +101,7 @@ class Lidar:
                         time_start = time.time()
                         frame = DataFrame().frame
                         for i in range(1000):
-                            self.s.sendto(frame, (str(self.master.ip), self.master.point_port))
+                            s.sendto(frame, (str(self.master.ip), self.master.point_port))
                         sleep_time = time_start+1 - time.time()
                         sleep_time = sleep_time if sleep_time > 0 else 0
                 except Exception as e:
@@ -150,7 +154,12 @@ class Lidar:
     def onWriteConfigurationParameters(self, req: general.WriteConfigurationParameters):
         pass
     def onReadConfigurationParameters(self, req: general.ReadConfigurationParameters):
-        pass
+        params = [general.ConfigurationParameter(key, value) for key,value in self.config_parameters.items() if key in req.keys]
+        result = general.ReadConfigurationParametersResponse(params[0].key,
+                                                        general.ConfigurationParameter.ErrorCode.NO_ERROR,
+                                                        params
+        )
+        return result
 
 
 
@@ -189,7 +198,7 @@ class Lidar:
         self.imu_data_push_freq = req.frequency
         return lidar.SetImuDataPushFrequencyResponse()
     def onGetImuDataPushFrequency(self, req: lidar.GetImuDataPushFrequency):
-        return lidar.GetImuDataPushFrequencyResponse(lidar.PushFrequency.FREQ_0HZ)
+        return lidar.GetImuDataPushFrequencyResponse(lidar.PushFrequency.FREQ_200HZ)
     def onUpdateUtcSynchronizationTime(self, req: lidar.UpdateUtcSynchronizationTime):
         pass
     
@@ -205,7 +214,7 @@ class Lidar:
         general.GetDeviceIpInformation          : onGetDeviceIpInformation,              
         # general.RebootDevice                    : onRebootDevice,    
         # general.WriteConfigurationParameters    : onWriteConfigurationParameters,                    
-        # general.ReadConfigurationParameters     : onReadConfigurationParameters,                   
+        general.ReadConfigurationParameters     : onReadConfigurationParameters,                   
 
         lidar.SetMode                           : onSetMode,       
         lidar.WriteLidarExtrinsicParameters     : onWriteLidarExtrinsicParameters,                             

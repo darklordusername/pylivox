@@ -892,6 +892,14 @@ class ReadConfigurationParametersResponse(General, IsErrorResponse):
         return f'{{{type(self).__name__} error:{self.is_error} error_key{self.error_key} error_code{self.error_code} params:{self.param_list}}}'
 
     @property
+    def error_key(self)->ConfigurationParameter.Key:
+        return self._error_key
+
+    @error_key.setter
+    def error_key(self, value:'ConfigurationParameter.Key| int'):
+        self._error_key = ConfigurationParameter.Key(value)
+
+    @property
     def error_code(self) -> ConfigurationParameter.ErrorCode:
         return self._error_code
 
