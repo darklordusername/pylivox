@@ -9,7 +9,7 @@ import ipaddress
 # project
 from pylivox.control.frame import (Frame, Cmd,
                                    IsErrorResponse, IsErrorResponseOnly,
-                                   DeviceType, get_default_device_type, get_default_device_version,
+                                   DeviceType, get_default_device_type, get_default_device_version, get_ignore_type_restriction,
                                    support_only, )
 
 
@@ -187,13 +187,13 @@ class Handshake(General):
                      device_version: 'tuple(int,int,int,int)' = None):
         device_type = device_type or get_default_device_type()
         device_version = device_version or get_default_device_version()
-        if ((device_type == DeviceType.HORIZON and device_version >= (6, 4, 0, 0)) or
-            (device_type == DeviceType.TELE_15 and device_version >= (3, 7, 0, 0))
-            ):
+        imu_port = None
+        if len(payload) == struct.calcsize('<4sHHH'):
             ip, point_port, cmd_port, imu_port = struct.unpack('<4sHHH', payload)
-        else:
+        elif( len(payload) == struct.calcsize('4sHH')):
             ip, point_port, cmd_port = struct.unpack('<4sHH', payload)
-            imu_port = None
+        else:
+            raise ValueError
         return cls(ip, point_port, cmd_port, imu_port, device_type, device_version)
 
 
@@ -505,16 +505,14 @@ class ConfigureStaticDynamicIp(General):
     def from_payload(cls, payload: bytes, device_type = None, device_version = None):
         device_type = device_type or get_default_device_type() 
         device_version = device_version or get_default_device_version()
-        if ((device_type == DeviceType.HORIZON and device_version >= (6, 4, 0, 0)) or
-            (device_type == DeviceType.TELE_15 and device_version >= (7, 3, 0, 0)) or
-            (device_type == DeviceType.MID_70 and device_version >= (10, 3, 0, 0)) or
-            (device_type == DeviceType.AVIA and device_version >= (11, 6, 0, 0))
-            ):
+        mask = None
+        gw = None
+        if len(payload) == struct.calcsize('<?4s4s4s'):
             is_static, ip, mask, gw = struct.unpack('<?4s4s4s', payload)
-        else:
+        elif len(payload) == struct.calcsize('<?4s'):
             is_static, ip = struct.unpack('<?4s', payload)
-            mask = None
-            gw = None
+        else:
+            raise ValueError
         return cls(is_static, ip, mask, gw, device_type, device_version)
 
 
@@ -563,16 +561,12 @@ class GetDeviceIpInformationResponse(ConfigureStaticDynamicIp, IsErrorResponse):
     def from_payload(cls, payload, device_type = None, device_version = None):
         device_type = device_type or get_default_device_type()
         device_version = device_version or get_default_device_version()
-        if ((device_type == DeviceType.HORIZON and device_version >= (6, 4, 0, 0)) or
-            (device_type == DeviceType.TELE_15 and device_version >= (7, 3, 0, 0)) or
-            (device_type == DeviceType.MID_70 and device_version >= (10, 3, 0, 0)) or
-            (device_type == DeviceType.AVIA and device_version >= (11, 6, 0, 0))
-            ):
+        mask = None
+        gw = None
+        if len(payload) == struct.calcsize('<??4s4s4s'):
             is_error, is_static, ip, mask, gw = struct.unpack('<??4s4s4s', payload)
-        else:
+        elif len(payload) == struct.calcsize('<??4s'):
             is_error, is_static, ip = struct.unpack('<??4s', payload)
-            mask = None
-            gw = None
         return cls(is_static, ip, mask, gw, is_error, device_type, device_version)
 
 

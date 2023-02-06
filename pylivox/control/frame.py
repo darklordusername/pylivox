@@ -31,6 +31,14 @@ class DeviceType(enum.Enum):
 #Global config for current device
 _Device_type = DeviceType.HORIZON
 _Device_version = (11,11,1,1)
+_Ignore_type_restriction = True
+
+def set_ignore_type_restriction(value:bool):
+    assert type(value) is bool
+    _Ignore_type_restriction = value
+
+def get_ignore_type_restriction()->bool:
+    return _Ignore_type_restriction
 
 def set_default_device_type(device_type:DeviceType):
     global _Device_type
@@ -55,14 +63,15 @@ def support_only(devices:'list(tuple(DeviceType, tuple(int,int,int,int)))'):
         old_init= cls.__init__
         @functools.wraps(old_init, )
         def __init__(self, *args, **kwargs):
-            signature = inspect.signature(old_init)
-            b = signature.bind(self, *args, **kwargs)
-            b.apply_defaults()
-            arguments = b.arguments
-            device_type = arguments['device_type'] or get_default_device_type()
-            device_version = arguments['device_version'] or get_default_device_version()
-            if not next((d for d,v in devices if device_type == d and device_version >= v), None):
-                raise Exception(f'Device {device_type} version:{device_version} does not support {self}')
+            if not get_ignore_type_restriction():
+                signature = inspect.signature(old_init)
+                b = signature.bind(self, *args, **kwargs)
+                b.apply_defaults()
+                arguments = b.arguments
+                device_type = arguments['device_type'] or get_default_device_type()
+                device_version = arguments['device_version'] or get_default_device_version()
+                if not next((d for d,v in devices if device_type == d and device_version >= v), None):
+                    raise Exception(f'Device {device_type} version:{device_version} does not support {self}')
             old_init(self, *args, **kwargs)
         cls.__init__ = __init__
         return cls
