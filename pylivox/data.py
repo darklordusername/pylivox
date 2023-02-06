@@ -48,6 +48,25 @@ class DataType1:
     _PACK_FORMAT = '<IHHB' #Depth, Zenith angle, Azimuth, reflectivity
     N = 100
 
+    def __init__(self):
+        # with open('mid40.csv') as f:
+        #     data = f.read()
+        # lines = data.split('\n')
+        # points = [ [float(i) for i in line.split(',')] for line in lines[1:-1] ] #timestamp/s, azimuth/deg, zenith/deg
+        # def create_data(time:float, azimuth:float, zenith:float)->'list(int,int,int,int)':
+        #     return [int(time*1000000000), 100, int(azimuth*100), int(zenith*100) ]
+        # self._points = [ create_data(*point) for point in points]
+        self._points = [ [10000, 100, 100] ]
+        self._i = 0
+        self._len = len(self._points)
+
+    def __iter__(self):
+        return self
+        
+    def __next__(self):
+        self._i = self._i + 1 if self._i+1 < self._len else 0
+        return self._points[self._i] 
+
 class DataType2:
     TYPE = 2
     _PACK_FORMAT = '<IIIBB' #X, Y, Z, reflectivity, tag
@@ -83,7 +102,7 @@ class Frame:
     PROTOCOL_VERSION = 5
     SLOT_ID = 1
     LIDAR_ID = 1
-    DATA = DataType3()
+    DATA = DataType1()
 
     @property
     def header(self)->bytes:
@@ -97,10 +116,15 @@ class Frame:
                             int(time.time() * 1000000000),
                             )
 
+
     @property
     def payload(self):
         length = struct.calcsize(self.DATA._PACK_FORMAT)
+        # t = [*next(self.DATA)]
+        value =  b''.join([ struct.pack('<IHHB',  *next(self.DATA), 100 ) for i in range(100)])
+        # return value
         return os.urandom(length * self.DATA.N)
+
 
     @property
     def frame(self)->bytes:
